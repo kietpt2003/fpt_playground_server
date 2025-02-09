@@ -35,7 +35,7 @@ if (builder.Environment.IsProduction())
         builder.Configuration["SmtpClient:Mail"] = smtpMailString;
     }
 
-    var smtpPasswordString = Environment.GetEnvironmentVariable("SMTP_PASWORD");
+    var smtpPasswordString = Environment.GetEnvironmentVariable("SMTP_PASSWORD");
     if (!string.IsNullOrEmpty(smtpPasswordString))
     {
         builder.Configuration["SmtpClient:Password"] = smtpPasswordString;
