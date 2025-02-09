@@ -7,6 +7,8 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
+# Install envsubst for replacing environment variables
+RUN apt-get update && apt-get install -y gettext-base
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -27,4 +29,11 @@ RUN dotnet publish "./FPTPlaygroundServer.csproj" -c $BUILD_CONFIGURATION -o /ap
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Copy appsettings template into container
+COPY FPTPlaygroundServer/appsettings.Production.json appsettings.template.json
+
+# Replace environment variables in appsettings.Production.json
+RUN envsubst < appsettings.template.json > appsettings.Production.json
+
 ENTRYPOINT ["dotnet", "FPTPlaygroundServer.dll"]
