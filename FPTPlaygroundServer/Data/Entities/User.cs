@@ -19,6 +19,9 @@ public class User
     public Account Account { get; set; } = default!;
     public Specialize? Specialize { get; set; }
     public Server Server { get; set; } = default!;
+    public ICollection<UserIncome> UserIncomes { get; set; } = [];
+    public ICollection<UserLevelPass> UserLevelPasses { get; set; } = [];
+    public ICollection<UserAchievement> UserAchievements { get; set; } = [];
 }
 
 public enum Gender
