@@ -3,6 +3,15 @@ using FPTPlaygroundServer.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Environment.IsProduction())
+{
+    var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+    if (!string.IsNullOrEmpty(dbConnectionString))
+    {
+        builder.Configuration["ConnectionStrings:DefaultConnection"] = dbConnectionString;
+    }
+}
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllerServices();
