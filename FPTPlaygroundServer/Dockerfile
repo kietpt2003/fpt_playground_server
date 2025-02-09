@@ -38,7 +38,13 @@ COPY --from=publish /app/publish .
 # Copy appsettings template into container
 COPY FPTPlaygroundServer/appsettings.Production.json appsettings.template.json
 
+# Switch to root to replace environment variables
+USER root
+
 # Replace environment variables in appsettings.Production.json
 RUN envsubst < appsettings.template.json > appsettings.Production.json
+
+# Switch back to non-root user for security
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "FPTPlaygroundServer.dll"]
