@@ -2,18 +2,10 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
-
-# Switch to root to install dependencies
-USER root
-
-# Install envsubst for replacing environment variables
-RUN apt-get update && apt-get install -y gettext-base
-
-# Switch back to non-root user for security
-USER $APP_UID
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -34,9 +26,6 @@ RUN dotnet publish "./FPTPlaygroundServer.csproj" -c $BUILD_CONFIGURATION -o /ap
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-
-# Copy appsettings template into container
-COPY FPTPlaygroundServer/appsettings.Production.json appsettings.template.json
 
 # Define environment variables (these will be overridden at runtime)
 ARG DB_CONNECTION_STRING
@@ -61,14 +50,5 @@ ENV PAYOS_CLIENT_ID=$PAYOS_CLIENT_ID
 ENV PAYOS_API_KEY=$PAYOS_API_KEY
 ENV PAYOS_CHECKSUM_KEY=$PAYOS_CHECKSUM_KEY
 ENV GOOGLE_STORAGE_BUCKET=$GOOGLE_STORAGE_BUCKET
-
-# Switch to root to replace environment variables
-USER root
-
-# Replace environment variables in appsettings.Production.json
-RUN envsubst < appsettings.template.json > appsettings.Production.json
-
-# Switch back to non-root user for security
-USER $APP_UID
 
 ENTRYPOINT ["dotnet", "FPTPlaygroundServer.dll"]
