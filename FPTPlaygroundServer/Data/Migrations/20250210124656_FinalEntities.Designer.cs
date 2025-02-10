@@ -3,6 +3,7 @@ using System;
 using FPTPlaygroundServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FPTPlaygroundServer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250210124656_FinalEntities")]
+    partial class FinalEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -755,9 +758,6 @@ namespace FPTPlaygroundServer.Data.Migrations
 
                     b.Property<int>("Experience")
                         .HasColumnType("integer");
-
-                    b.Property<bool>("IsClaim")
-                        .HasColumnType("boolean");
 
                     b.HasKey("UserId", "LevelPassId");
 

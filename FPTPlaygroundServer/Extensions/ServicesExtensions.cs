@@ -10,5 +10,6 @@ public static class ServicesExtensions
         //services.AddScoped<MailService>();
         services.AddScoped<CurrentUserService>();
         services.AddScoped<CurrentServerService>();
+        services.AddScoped<TokenService>();
     }
 }

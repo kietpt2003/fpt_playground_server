@@ -17,11 +17,19 @@ public class User
     public DateTime UpdatedAt { get; set; }
 
     public Account Account { get; set; } = default!;
+    public CoinWallet CoinWallet { get; set; } = default!;
+    public DiamondWallet DiamondWallet { get; set; } = default!;
     public Specialize? Specialize { get; set; }
     public Server Server { get; set; } = default!;
+    public ICollection<ConversationMember> ConversationMembers { get; set; } = [];
     public ICollection<UserIncome> UserIncomes { get; set; } = [];
     public ICollection<UserLevelPass> UserLevelPasses { get; set; } = [];
     public ICollection<UserAchievement> UserAchievements { get; set; } = [];
+    public ICollection<UserMasked> UserMaskeds { get; set; } = [];
+    public ICollection<DailyCheckpoint> DailyCheckpoints { get; set; } = [];
+    public ICollection<Message> Messages { get; set; } = [];
+    public ICollection<MessageStatus> MessageStatuses { get; set; } = [];
+    public ICollection<Notification> Notifications { get; set; } = [];
 }
 
 public enum Gender

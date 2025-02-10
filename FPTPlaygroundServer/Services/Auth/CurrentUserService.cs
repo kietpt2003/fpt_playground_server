@@ -2,11 +2,9 @@
 using FPTPlaygroundServer.Common.Settings;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
-using FPTPlaygroundServer.Services.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -32,23 +30,32 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
             ClockSkew = TimeSpan.Zero
         };
 
-        if (token == "")
+        if (string.IsNullOrEmpty(token))
         {
-            return null;
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPA_00)
+                .AddReason("token", "Missing Token")
+                .Build();
         }
 
         try
         {
             var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-            var userInfoJson = principal.Claims.FirstOrDefault(c => c.Type == "UserInfo")?.Value;
+            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
 
-            var userInfo = JsonConvert.DeserializeObject<TokenRequest>(userInfoJson!);
+            if (string.IsNullOrEmpty(userId))
+                throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPA_00)
+                .AddReason("token", "Don't have user info in Token.")
+                .Build();
 
             return await context.Users
                 .Include(u => u.Account)
                 .Include(u => u.Specialize)
                 .Include(u => u.Server)
-                .FirstOrDefaultAsync(x => x.Id == userInfo!.Id);
+                .Include(u => u.CoinWallet)
+                .Include(u => u.DiamondWallet)
+                .FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
         }
         catch (Exception ex)
         {
