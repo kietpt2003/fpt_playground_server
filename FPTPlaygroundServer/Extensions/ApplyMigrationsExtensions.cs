@@ -1,4 +1,5 @@
 ﻿using FPTPlaygroundServer.Data;
+using FPTPlaygroundServer.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 
 namespace FPTPlaygroundServer.Extensions;
@@ -13,6 +14,15 @@ public static class ApplyMigrationsExtensions
         if (context.Database.GetPendingMigrations().Any())
         {
             context.Database.Migrate();
+        }
+
+        if (!await context.Servers.AnyAsync())
+        {
+            foreach (var brand in ServerSeed.Default)
+            {
+                context.Servers.Add(brand);
+            }
+            await context.SaveChangesAsync();
         }
     }
 }

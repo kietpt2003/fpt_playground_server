@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace FPTPlaygroundServer.Features.Account;
+namespace FPTPlaygroundServer.Features.Accounts;
 
 [ApiController]
 public class GetCurrentAccountController : ControllerBase

@@ -9,6 +9,8 @@ public class Account
     public Role Role { get; set; }
     public LoginMethod LoginMethod { get; set; }
     public AccountStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public ICollection<User> Users { get; set; } = [];
     public ICollection<Device> Devices { get; set; } = [];

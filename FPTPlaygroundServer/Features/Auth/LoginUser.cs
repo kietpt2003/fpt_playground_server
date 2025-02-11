@@ -31,12 +31,13 @@ public class LoginaccountController : ControllerBase
                 .WithMessage("Email cannot be empty")
                 .EmailAddress()
                 .WithMessage("Invalid email");
+
             RuleFor(r => r.Password)
                 .NotEmpty().WithMessage("Password cannot be empty")
                 .MinimumLength(8).WithMessage("Password must be between 8 and 15 characters long")
                 .MaximumLength(15).WithMessage("Password must be between 8 and 15 characters long")
-                .Matches(@"^(?=.*[A-Z])(?=.*\W).{8,}$")
-                .WithMessage("Password must contain at least 1 uppercase letter and 1 special character");
+                .Matches(@"^(?=.*[A-Z])(?=.*\W)(?=.*\d).{8,15}$")
+                .WithMessage("Password must contain at least 1 uppercase letter, 1 special character, and 1 digit.");
         }
     }
 
@@ -49,7 +50,7 @@ public class LoginaccountController : ControllerBase
                             "<br>&nbsp; - 1 acc thì có thể được đăng nhập bằng nhiều thiết bị (điện thoại, laptop)." +
                             "<br>&nbsp; - deviceToken: Không gửi hoặc để trống cũng được, nhưng tức là thiết bị đó sẽ không nhận được notification thông qua FCM." +
                             "<br>&nbsp; - Hoặc sẽ nhận được notification nếu acc này đã lưu những deviceToken trước đó thì sẽ sẽ gửi noti đến những device đã đk vs acc này." +
-                            "<br>&nbsp; - account bị Inactive thì vẫn Login vô được (Vì liên quan đến tiền trong ví)."
+                            "<br>&nbsp; - Account bị Inactive thì vẫn Login vô được (Vì liên quan đến tiền trong ví)."
     )]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
