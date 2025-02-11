@@ -6,6 +6,7 @@ public class Server
     public string Name { get; set; } = default!;
     public ServerState State { get; set; }
     public ServerStatus Status { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public ICollection<User> Users { get; set; } = [];
 }
