@@ -9,6 +9,8 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Cryptography;
 using FPTPlaygroundServer.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using FPTPlaygroundServer.Features.Auth.Mappers;
+using FPTPlaygroundServer.Services.Auth.Models;
 
 namespace FPTPlaygroundServer.Features.Auth;
 
@@ -36,8 +38,12 @@ public class LoginaccountController : ControllerBase
                 .NotEmpty().WithMessage("Password cannot be empty")
                 .MinimumLength(8).WithMessage("Password must be between 8 and 15 characters long")
                 .MaximumLength(15).WithMessage("Password must be between 8 and 15 characters long")
-                .Matches(@"^(?=.*[A-Z])(?=.*\W)(?=.*\d).{8,15}$")
+                .Matches(@"^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?""{}|<>_\-])[A-Za-z\d!@#$%^&*(),.?""{}|<>_\-]{8,15}$")
                 .WithMessage("Password must contain at least 1 uppercase letter, 1 special character, and 1 digit.");
+
+            RuleFor(r => r.ServerId)
+                .NotEmpty()
+                .WithMessage("ServerId cannot be empty");
         }
     }
 
@@ -49,8 +55,7 @@ public class LoginaccountController : ControllerBase
                             "<br>&nbsp; - deviceToken: Dùng để gửi notification (mỗi 1 máy chỉ có duy nhất 1 deviceToken)." +
                             "<br>&nbsp; - 1 acc thì có thể được đăng nhập bằng nhiều thiết bị (điện thoại, laptop)." +
                             "<br>&nbsp; - deviceToken: Không gửi hoặc để trống cũng được, nhưng tức là thiết bị đó sẽ không nhận được notification thông qua FCM." +
-                            "<br>&nbsp; - Hoặc sẽ nhận được notification nếu acc này đã lưu những deviceToken trước đó thì sẽ sẽ gửi noti đến những device đã đk vs acc này." +
-                            "<br>&nbsp; - Account bị Inactive thì vẫn Login vô được (Vì liên quan đến tiền trong ví)."
+                            "<br>&nbsp; - Hoặc sẽ nhận được notification nếu acc này đã lưu những deviceToken trước đó thì sẽ sẽ gửi noti đến những device đã đk vs acc này."
     )]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
@@ -68,6 +73,14 @@ public class LoginaccountController : ControllerBase
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_02)
                 .AddReason("password", "Incorrect password")
+                .Build();
+        }
+
+        if (account.Status == AccountStatus.Inactive)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("account", "Account has been blocked")
                 .Build();
         }
 
@@ -102,13 +115,24 @@ public class LoginaccountController : ControllerBase
             await context.SaveChangesAsync();
         }
 
-        var user = await context.Users.FirstOrDefaultAsync(u => u.AccountId == account.Id && u.ServerId == request.ServerId) ?? throw FPTPlaygroundException.NewBuilder()
-                .WithCode(FPTPlaygroundErrorCode.FPB_00)
-                .AddReason("user", $"This account doesn't have user on server {request.ServerId}")
-                .Build();
+        var user = await context.Users
+            .Include(u => u.Account)
+            .FirstOrDefaultAsync(u => u.AccountId == account.Id && u.ServerId == request.ServerId);
 
-        string token = tokenService.CreateToken(user.Id);
-        string refreshToken = tokenService.CreateRefreshToken(user.Id);
+        string token = "";
+        string refreshToken = "";
+
+        if (user != null)
+        {
+            token = tokenService.CreateToken(user.ToTokenRequest()!);
+            refreshToken = tokenService.CreateRefreshToken(user.ToTokenRequest()!);
+        }
+        else //TH đổi login mà chưa có user thì trả về token ko có userId để vô trang RegisterUser
+        {
+            TokenRequest tokenRequest = new() { Email = request.Email };
+            token = tokenService.CreateToken(tokenRequest);
+            refreshToken = tokenService.CreateRefreshToken(tokenRequest);
+        }
 
         return Ok(new TokenResponse
         {

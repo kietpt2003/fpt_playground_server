@@ -8,6 +8,11 @@ using System.Security.Claims;
 using System.Text;
 using FPTPlaygroundServer.Common.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using FPTPlaygroundServer.Services.Auth.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using FPTPlaygroundServer.Features.Auth.Models;
+using FPTPlaygroundServer.Features.Auth.Mappers;
 
 namespace FPTPlaygroundServer.Services.Auth;
 
@@ -16,11 +21,13 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
     private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(jwtSettings.Value.SigningKey));
 
-    public string CreateToken(Guid userId)
+    public string CreateToken(TokenRequest tokenRequest)
     {
+        var userInfoJson = JsonConvert.SerializeObject(tokenRequest, new StringEnumConverter());
+
         var claims = new List<Claim>
         {
-            new("UserId", userId.ToString()),
+            new("UserInfo", userInfoJson),
             new("TokenClaim", "ForVerifyOnly")
         };
 
@@ -39,11 +46,13 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
         return tokenHandler.WriteToken(token);
     }
 
-    public string CreateRefreshToken(Guid userId)
+    public string CreateRefreshToken(TokenRequest tokenRequest)
     {
+        var userInfoJson = JsonConvert.SerializeObject(tokenRequest, new StringEnumConverter());
+
         var claims = new List<Claim>
         {
-            new("UserId", userId.ToString()),
+            new("UserInfo", userInfoJson),
             new("RFTokenClaim", "ForVerifyOnly")
         };
 
@@ -62,7 +71,7 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
         return tokenHandler.WriteToken(token);
     }
 
-    public async Task<User?> ValidateRefreshToken(string token, AppDbContext context)
+    public async Task<TokenResponse?> ValidateRefreshToken(string token, AppDbContext context)
     {
         if (string.IsNullOrEmpty(token))
         {
@@ -89,9 +98,9 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
             var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
 
             // Extract the UserInfo claim
-            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            var userInfoJson = principal.Claims.FirstOrDefault(c => c.Type == "UserInfo")?.Value;
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userInfoJson))
                 throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPA_00)
                 .AddReason("token", "Don't have user info in Token.")
@@ -104,8 +113,33 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
                 .WithCode(FPTPlaygroundErrorCode.FPA_00)
                 .AddReason("token", "Missing validation info in Token.")
                 .Build();
+            // Deserialize the custom user info object
+            var tokenInfo = JsonConvert.DeserializeObject<TokenRequest>(userInfoJson);
 
-            return await context.Users.FirstOrDefaultAsync(u => u.Id == Guid.Parse(userId));
+            var user = await context.Users
+                .Include(u => u.Account)
+                .FirstOrDefaultAsync(u => u.Id == tokenInfo!.UserId);
+
+            string tokenResponse = "";
+            string refreshToken = "";
+
+            if (user != null)
+            {
+                tokenResponse = CreateToken(user.ToTokenRequest()!);
+                refreshToken = CreateRefreshToken(user.ToTokenRequest()!);
+            }
+            else
+            {
+                TokenRequest tokenRequest = new() { Email = tokenInfo!.Email };
+                tokenResponse = CreateToken(tokenRequest);
+                refreshToken = CreateRefreshToken(tokenRequest);
+            }
+
+            return new TokenResponse
+            {
+                Token = tokenResponse,
+                RefreshToken = refreshToken
+            };
         }
         catch (Exception ex)
         {

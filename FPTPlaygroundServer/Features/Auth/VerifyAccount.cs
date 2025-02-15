@@ -9,6 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using FPTPlaygroundServer.Features.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 using FPTPlaygroundServer.Common.Exceptions;
+using FPTPlaygroundServer.Services.Auth.Models;
 
 namespace FPTPlaygroundServer.Features.Auth;
 
@@ -45,7 +46,10 @@ public class VerifyAccountController: ControllerBase
                             "<br>&nbsp; - Hoặc sẽ nhận được notification nếu acc này đã lưu những deviceToken trước đó thì sẽ sẽ gửi noti đến những device đã đk vs acc này." +
                             "<br>&nbsp; - Account bị Inactive thì vẫn Verify được (Vì liên quan đến tiền trong ví)."
     )]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request,
         [FromServices] AppDbContext context, [FromServices] VerifyCodeService verifyCodeService, [FromServices] TokenService tokenService)
     {
@@ -68,6 +72,14 @@ public class VerifyAccountController: ControllerBase
             await context.SaveChangesAsync();
         }
 
-        return Ok();
+        TokenRequest tokenRequest = new() { Email = request.Email };
+        string token = tokenService.CreateToken(tokenRequest);
+        string refreshToken = tokenService.CreateRefreshToken(tokenRequest);
+
+        return Ok(new TokenResponse
+        {
+            Token = token,
+            RefreshToken = refreshToken
+        });
     }
 }

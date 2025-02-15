@@ -2,9 +2,12 @@
 using FPTPlaygroundServer.Common.Settings;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
+using FPTPlaygroundServer.Services.Auth.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -41,13 +44,31 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
         try
         {
             var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
-            var userId = principal.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            var userInfoJson = principal.Claims.FirstOrDefault(c => c.Type == "UserInfo")?.Value;
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userInfoJson))
                 throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPA_00)
                 .AddReason("token", "Don't have user info in Token.")
                 .Build();
+
+            var desrializeSettings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Include,
+                ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver()
+            };
+
+            var jObject = JObject.Parse(userInfoJson);
+
+            if (jObject["UserId"]?.Type == JTokenType.Null)
+            {
+                throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_00)
+                .AddReason("token", "Don't have user info in Token.")
+                .Build();
+            }
+
+            var tokenInfo = new TokenRequest { UserId = jObject["UserId"]?.ToObject<Guid?>(), Email = jObject["Email"]!.ToString() };
 
             return await context.Users
                 .Include(u => u.Account)
@@ -55,12 +76,15 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
                 .Include(u => u.Server)
                 .Include(u => u.CoinWallet)
                 .Include(u => u.DiamondWallet)
-                .FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
+                .FirstOrDefaultAsync(x => x.Id == tokenInfo!.UserId);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            return null;
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_02)
+                .AddReason("token", "Token invalid.")
+                .Build();
         }
     }
 

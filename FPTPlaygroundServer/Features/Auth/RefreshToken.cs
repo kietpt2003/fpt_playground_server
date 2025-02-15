@@ -38,15 +38,8 @@ public class RefreshTokenController : ControllerBase
     [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] TokenService tokenService)
     {
-        var userInfo = await tokenService.ValidateRefreshToken(request.RefreshToken, context);
+        var tokenResponse = await tokenService.ValidateRefreshToken(request.RefreshToken, context);
 
-        string token = tokenService.CreateToken(userInfo!.Id);
-        string refreshToken = tokenService.CreateRefreshToken(userInfo!.Id);
-
-        return Ok(new TokenResponse
-        {
-            Token = token,
-            RefreshToken = refreshToken
-        });
+        return Ok(tokenResponse);
     }
 }

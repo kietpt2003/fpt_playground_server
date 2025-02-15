@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace FPTPlaygroundServer.Features.Auth;
 
@@ -31,7 +32,7 @@ public class SignupAccountController : ControllerBase
                 .NotEmpty().WithMessage("Password cannot be empty")
                 .MinimumLength(8).WithMessage("Password must be between 8 and 15 characters long")
                 .MaximumLength(15).WithMessage("Password must be between 8 and 15 characters long")
-                .Matches(@"^(?=.*[A-Z])(?=.*\W)(?=.*\d).{8,15}$")
+                .Matches(@"^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?""{}|<>_\-])[A-Za-z\d!@#$%^&*(),.?""{}|<>_\-]{8,15}$")
                 .WithMessage("Password must contain at least 1 uppercase letter, 1 special character, and 1 digit.");
 
             RuleFor(r => r.Role)
@@ -53,6 +54,7 @@ public class SignupAccountController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] VerifyCodeService verifyCodeService)
     {
+        DateTime currentDate = DateTime.UtcNow;
         var account = new Account
         {
             Email = request.Email,
@@ -60,6 +62,8 @@ public class SignupAccountController : ControllerBase
             LoginMethod = LoginMethod.Default,
             Status = AccountStatus.Pending,
             Password = HashPassword(request.Password),
+            CreatedAt = currentDate,
+            UpdatedAt = currentDate,
         };
 
         if (await context.Accounts.AnyAsync(a => a.Email == account.Email && a.Status == AccountStatus.Pending))

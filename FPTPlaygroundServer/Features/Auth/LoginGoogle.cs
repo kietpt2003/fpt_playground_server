@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using FPTPlaygroundServer.Features.Auth.Mappers;
 using FPTPlaygroundServer.Common.Filters;
 using FluentValidation;
+using FPTPlaygroundServer.Services.Auth.Models;
 
 namespace FPTPlaygroundServer.Features.Auth;
 
@@ -80,7 +81,7 @@ public class LoginGoogleController : ControllerBase
                     FullName = ggResponse.Name,
                     AvatarUrl = ggResponse.Picture,
                     LoginMethod = LoginMethod.Google,
-                    Status = AccountStatus.Active
+                    Status = AccountStatus.Active,
                 };
                 if (!string.IsNullOrEmpty(request.DeviceToken))
                 {
@@ -92,10 +93,15 @@ public class LoginGoogleController : ControllerBase
                 context.Accounts.Add(registerAccountRequest.ToAccountRequest()!);
                 await context.SaveChangesAsync();
 
-                throw FPTPlaygroundException.NewBuilder()
-                    .WithCode(FPTPlaygroundErrorCode.FPB_00)
-                    .AddReason("user", $"This account doesn't have user on server {request.ServerId}")
-                    .Build();
+                TokenRequest tokenRequest = new() { Email = ggResponse!.Email };
+                string token = tokenService.CreateToken(tokenRequest);
+                string refreshToken = tokenService.CreateRefreshToken(tokenRequest);
+
+                return Ok(new TokenResponse
+                {
+                    Token = token,
+                    RefreshToken = refreshToken
+                });
             }
 
             //TH đăng nhập bằng phương thức GG
@@ -114,13 +120,24 @@ public class LoginGoogleController : ControllerBase
                     await context.SaveChangesAsync();
                 }
 
-                var user = await context.Users.FirstOrDefaultAsync(u => u.AccountId == account.Id && u.ServerId == request.ServerId) ?? throw FPTPlaygroundException.NewBuilder()
-                    .WithCode(FPTPlaygroundErrorCode.FPB_00)
-                    .AddReason("user", $"This account doesn't have user on server {request.ServerId}")
-                    .Build();
+                var user = await context.Users
+                    .Include(u => u.Account)
+                    .FirstOrDefaultAsync(u => u.AccountId == account.Id && u.ServerId == request.ServerId);
 
-                string token = tokenService.CreateToken(user.Id);
-                string refreshToken = tokenService.CreateRefreshToken(user.Id);
+                string token = "";
+                string refreshToken = "";
+
+                if (user != null)
+                {
+                    token = tokenService.CreateToken(user.ToTokenRequest()!);
+                    refreshToken = tokenService.CreateRefreshToken(user.ToTokenRequest()!);
+                }
+                else
+                {
+                    TokenRequest tokenRequest = new() { Email = ggResponse!.Email };
+                    token = tokenService.CreateToken(tokenRequest);
+                    refreshToken = tokenService.CreateRefreshToken(tokenRequest);
+                }
 
                 return Ok(new TokenResponse
                 {
