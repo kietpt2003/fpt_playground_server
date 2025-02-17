@@ -18,9 +18,18 @@ public static class ApplyMigrationsExtensions
 
         if (!await context.Servers.AnyAsync())
         {
-            foreach (var brand in ServerSeed.Default)
+            foreach (var server in ServerSeed.Default)
             {
-                context.Servers.Add(brand);
+                context.Servers.Add(server);
+            }
+            await context.SaveChangesAsync();
+        }
+
+        if (!await context.LevelPasses.AnyAsync())
+        {
+            foreach (var levelPass in LevelPassSeed.Default)
+            {
+                context.LevelPasses.Add(levelPass);
             }
             await context.SaveChangesAsync();
         }

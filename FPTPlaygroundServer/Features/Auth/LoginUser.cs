@@ -68,6 +68,14 @@ public class LoginaccountController : ControllerBase
                 .AddReason("account", "Account not exist")
                 .Build();
 
+        if (account.LoginMethod == LoginMethod.Google)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_02)
+                .AddReason("account", "This account login by Google")
+                .Build();
+        }
+
         if (!VerifyHashedPassword(account.Password!, request.Password))
         {
             throw FPTPlaygroundException.NewBuilder()
@@ -89,14 +97,6 @@ public class LoginaccountController : ControllerBase
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_03)
                 .AddReason("account", "Account not verify")
-                .Build();
-        }
-
-        if (account.LoginMethod == LoginMethod.Google)
-        {
-            throw FPTPlaygroundException.NewBuilder()
-                .WithCode(FPTPlaygroundErrorCode.FPB_02)
-                .AddReason("account", "This account login by Google")
                 .Build();
         }
 

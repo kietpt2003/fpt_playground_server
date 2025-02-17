@@ -14,5 +14,5 @@ public class LevelPass
 
 public enum LevelPassStatus
 {
-    Acive, Inactive
+    Active, Inactive
 }

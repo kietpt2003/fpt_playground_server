@@ -170,6 +170,37 @@ public class CreateUser : ControllerBase
                 };
                 await context.DiamondWallets.AddAsync(newDiamondWallet);
 
+                var levelPass = await context.LevelPasses.FirstOrDefaultAsync(lp => lp.Level == 0);
+                Data.Entities.UserLevelPass userLevelPass = new()
+                {
+                    UserId = newUser.Id,
+                    LevelPassId = levelPass!.Id,
+                    Experience = 0,
+                    IsClaim = true,
+                };
+                await context.UserLevelPasses.AddAsync(userLevelPass);
+
+                DateTime today = DateTime.UtcNow.Date;
+
+                // Tìm ngày đầu tuần hiện tại, bắt đầu từ thứ Hai
+                int diff = (int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1;
+                DateTime startOfWeek = today.AddDays(-diff); // Bắt đầu từ 7h sáng của ngày đầu tuần. Lưu ý 7h sáng VN tức là 0h UTC. Và lưu xuống DB là 7h +7 => 7 - 7 = 0h UTC
+
+                for (int i = 0; i < 7; i++)
+                {
+                    DateTime checkpoint = startOfWeek.AddDays(i);
+
+                    DailyCheckpoint dailyCheckpoint = new()
+                    {
+                        UserId = newUser.Id,
+                        CoinValue = 200,
+                        DiamondValue = i == 6 ? 50 : null,
+                        CheckInDate = checkpoint,
+                        Status = DailyCheckpointStatus.Unchecked,
+                    };
+                    await context.DailyCheckpoints.AddAsync(dailyCheckpoint);
+                }
+
                 // Lưu tất cả vào database
                 await context.SaveChangesAsync();
 
