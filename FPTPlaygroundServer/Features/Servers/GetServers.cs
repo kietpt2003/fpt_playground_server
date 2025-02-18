@@ -2,6 +2,7 @@
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
 using FPTPlaygroundServer.Features.Servers.Mappers;
+using FPTPlaygroundServer.Features.Servers.Models;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Linq.Expressions;
@@ -27,6 +28,7 @@ public class GetServers : ControllerBase
         `SortColumn` (optional): name
         """
     )]
+    [ProducesResponseType(typeof(PageList<ServerResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context)
     {
         var query = context.Servers.AsQueryable();

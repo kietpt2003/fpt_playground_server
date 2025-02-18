@@ -1,11 +1,13 @@
 ﻿using FPTPlaygroundServer.Data.Entities;
+using FPTPlaygroundServer.Features.Servers.Mappers;
+using FPTPlaygroundServer.Features.UserLevelPasses.Mappers;
 using FPTPlaygroundServer.Features.Users.Models;
 
 namespace FPTPlaygroundServer.Features.Users.Mappers;
 
 public static class UserMapper
 {
-    public static UserResponse? ToUserResponse(this User? u)
+    public static UserResponse? ToUserResponse(this User? u, UserLevelPass? ulp)
     {
         if (u != null)
         {
@@ -23,7 +25,8 @@ public static class UserMapper
                 Account = u.Account.ToAccountResponse()!,
                 CoinWallet = u.CoinWallet.ToCoinWalletResponse()!,
                 DiamondWallet = u.DiamondWallet.ToDiamondWalletResponse()!,
-                Server = u.Server.ToServerResponse()!
+                Server = u.Server.ToServerResponse(),
+                UserLevelPass = ulp.ToUserLevelPassResponse()!,
             };
         }
         return null;

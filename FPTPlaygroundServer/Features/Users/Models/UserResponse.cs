@@ -1,4 +1,6 @@
 ﻿using FPTPlaygroundServer.Data.Entities;
+using FPTPlaygroundServer.Features.Servers.Models;
+using FPTPlaygroundServer.Features.UserLevelPasses.Models;
 
 namespace FPTPlaygroundServer.Features.Users.Models;
 
@@ -17,4 +19,5 @@ public class UserResponse
     public CoinWalletResponse? CoinWallet { get; set; }
     public DiamondWalletResponse? DiamondWallet { get; set; }
     public ServerResponse? Server { get; set; }
+    public UserLevelPassResponse? UserLevelPass { get; set; }
 }

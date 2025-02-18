@@ -58,9 +58,6 @@ public class LoginaccountController : ControllerBase
                             "<br>&nbsp; - Hoặc sẽ nhận được notification nếu acc này đã lưu những deviceToken trước đó thì sẽ sẽ gửi noti đến những device đã đk vs acc này."
     )]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] TokenService tokenService)
     {
         var account = await context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email) ?? throw FPTPlaygroundException.NewBuilder()

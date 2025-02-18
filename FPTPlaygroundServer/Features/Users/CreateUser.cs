@@ -133,6 +133,7 @@ public class CreateUser : ControllerBase
         }
 
         User newUser = new();
+        UserLevelPass userLevelPass = new();
 
         var strategy = context.Database.CreateExecutionStrategy();
         await strategy.ExecuteAsync(async () =>
@@ -171,7 +172,7 @@ public class CreateUser : ControllerBase
                 await context.DiamondWallets.AddAsync(newDiamondWallet);
 
                 var levelPass = await context.LevelPasses.FirstOrDefaultAsync(lp => lp.Level == 0);
-                Data.Entities.UserLevelPass userLevelPass = new()
+                userLevelPass = new()
                 {
                     UserId = newUser.Id,
                     LevelPassId = levelPass!.Id,
@@ -186,7 +187,7 @@ public class CreateUser : ControllerBase
                 int diff = (int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1;
                 DateTime startOfWeek = today.AddDays(-diff); // Bắt đầu từ 7h sáng của ngày đầu tuần. Lưu ý 7h sáng VN tức là 0h UTC. Và lưu xuống DB là 7h +7 => 7 - 7 = 0h UTC
 
-                for (int i = 0; i < 7; i++)
+                for (int i = 0; i < 14; i++)
                 {
                     DateTime checkpoint = startOfWeek.AddDays(i);
 
@@ -194,7 +195,7 @@ public class CreateUser : ControllerBase
                     {
                         UserId = newUser.Id,
                         CoinValue = 200,
-                        DiamondValue = i == 6 ? 50 : null,
+                        DiamondValue = (i == 6 || i == 13) ? 50 : null,
                         CheckInDate = checkpoint,
                         Status = DailyCheckpointStatus.Unchecked,
                     };
@@ -224,7 +225,7 @@ public class CreateUser : ControllerBase
 
         return Ok(new CreateUserResponse
         {
-            UserResponse =  newUser.ToUserResponse()!,
+            UserResponse =  newUser.ToUserResponse(userLevelPass)!,
             Token = tokenResonse,
             RefreshToken = refreshToken
         });

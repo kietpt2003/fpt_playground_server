@@ -47,9 +47,6 @@ public class VerifyAccountController: ControllerBase
                             "<br>&nbsp; - Account bị Inactive thì vẫn Verify được (Vì liên quan đến tiền trong ví)."
     )]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request,
         [FromServices] AppDbContext context, [FromServices] VerifyCodeService verifyCodeService, [FromServices] TokenService tokenService)
     {

@@ -54,9 +54,6 @@ public class ForgotAccountPassword : ControllerBase
                             "<br>&nbsp; - Account bị Inactive thì vẫn forgot password được (Vì liên quan đến tiền trong ví)."
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] VerifyCodeService verifyCodeService)
     {
         var account = await context.Accounts.FirstOrDefaultAsync(user => user.Email == request.Email) ?? throw FPTPlaygroundException.NewBuilder()

@@ -35,9 +35,6 @@ public class ResendVerifyController : ControllerBase
                             "<br>&nbsp; - Account bị Inactive thì vẫn resend verify code được (Vì liên quan đến tiền trong ví)."
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] VerifyCodeService verifyCodeService)
     {
         var user = await context.Accounts.FirstOrDefaultAsync(a => a.Email == request.Email);

@@ -1,4 +1,5 @@
 ﻿using FPTPlaygroundServer.Services.Background.AccountVerifies;
+using FPTPlaygroundServer.Services.Background.DailyCheckpoints;
 
 namespace FPTPlaygroundServer.Extensions;
 
@@ -8,5 +9,6 @@ public static class BackgroundServicesExtensions
     {
         services.AddHostedService<AccountVerifyStatusCheckService>();
         services.AddHostedService<AccountVerifyCleanupService>();
+        services.AddHostedService<DailyCheckpointRefreshService>();
     }
 }

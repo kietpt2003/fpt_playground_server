@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace FPTPlaygroundServer.Features.UserLevelPass;
+namespace FPTPlaygroundServer.Features.UserLevelPasses;
 
 [ApiController]
 [JwtValidationFilter]
@@ -31,8 +31,8 @@ public class UpdateUserLevel : ControllerBase
         }
     }
 
-    [HttpPut("user-level")]
-    [Tags("UserLevel")]
+    [HttpPut("user-level-pass")]
+    [Tags("UserLevelPasses")]
     [SwaggerOperation(
         Summary = "For Update User Level",
         Description = "This API is for user level up."
@@ -52,7 +52,12 @@ public class UpdateUserLevel : ControllerBase
                 .WithCode(FPTPlaygroundErrorCode.FPB_00)
                 .AddReason("userLevelPass", "userLevelPass empty")
                 .Build();
-        if (userLevelPass.Experience == userLevelPass.LevelPass.Require && userLevelPass.LevelPass.Level != 0)
+
+        var finalLevel = await context.LevelPasses
+            .OrderByDescending(lp => lp.Level)
+            .FirstOrDefaultAsync(lp => lp.Status == LevelPassStatus.Active);
+
+        if (userLevelPass.Experience == userLevelPass.LevelPass.Require && finalLevel!.Level == userLevelPass.LevelPass.Level)
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_00)
@@ -86,7 +91,7 @@ public class UpdateUserLevel : ControllerBase
                     break;
                 }
 
-                Data.Entities.UserLevelPass newUserLevelPass = new()
+                UserLevelPass newUserLevelPass = new()
                 {
                     UserId = user!.Id,
                     LevelPassId = nextLevelPass.Id,

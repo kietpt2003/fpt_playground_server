@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace FPTPlaygroundServer.Common.Filters;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
-public class RolesFilterAttributeparams(Role[] acceptedRoles) : Attribute, IAsyncActionFilter
+public class RolesFilterAttribute(params Role[] acceptedRoles) : Attribute, IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {

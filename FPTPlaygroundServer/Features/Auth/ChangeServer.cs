@@ -44,9 +44,6 @@ public class ChangeServer : ControllerBase
         Description = "This API is for change server"
     )]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] TokenService tokenService, [FromServices] CurrentUserService currentUserService, IHttpContextAccessor httpContextAccessor, IOptions<JwtSettings> jwtSettings)
     {
         SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(jwtSettings.Value.SigningKey));

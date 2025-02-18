@@ -43,9 +43,8 @@ public class UserCheckin : ControllerBase
     {
         DateTime currentTime = DateTime.UtcNow; //Giờ UTC hiện tại
         DateTime checkInDate = DateTime.UtcNow.Date; // 00:00 AM UTC <=> 07:00 AM VN
-        DateTime startCheckin = DateTime.UtcNow.Date.Date.AddHours(7); // 07:00 AM UTC
-        DateTime endOfDay = checkInDate.Date.AddDays(1).AddSeconds(-1); // 23:59:59 PM UTC
-        Console.WriteLine($"check {startCheckin} {currentTime} {endOfDay}");
+        DateTime startCheckin = checkInDate.AddHours(7); // 07:00 AM UTC
+        DateTime endOfDay = checkInDate.AddDays(1).AddSeconds(-1); // 23:59:59 PM UT
 
         if (currentTime < startCheckin || currentTime > endOfDay) //Nằm trong khoảng 7h UTC -> 23:59:59 PM UTC
         {
