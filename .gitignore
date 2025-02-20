@@ -13,6 +13,9 @@
 #appsettings.json
 appsettings.Development.json
 
+#account_service.json
+FPTPlaygroundServer/Credentials/account_service.json
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

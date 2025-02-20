@@ -12,6 +12,11 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
+            - name: Decode ACCOUNT_SERVICE from Secret
+              run: |
+                  cd FPTPlaygroundServer
+                  echo "${{ secrets.ACCOUNT_SERVICE }}" | base64 --decode > Credentials/account-service.json
+
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
