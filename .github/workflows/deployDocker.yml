@@ -15,6 +15,7 @@ jobs:
             - name: Decode ACCOUNT_SERVICE from Secret
               run: |
                   cd FPTPlaygroundServer
+                  mkdir -p Credentials  # Create folder "Credentials" if not exist
                   echo "${{ secrets.ACCOUNT_SERVICE }}" | base64 --decode > Credentials/account-service.json
 
             - name: Set up Docker Buildx
