@@ -72,6 +72,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
 
             return await context.Users
                 .Include(u => u.Account)
+                    .ThenInclude(a => a.Devices)
                 .Include(u => u.Specialize)
                 .Include(u => u.Server)
                 .Include(u => u.CoinWallet)

@@ -1,5 +1,7 @@
 ﻿using FPTPlaygroundServer.Services.Auth;
 using FPTPlaygroundServer.Services.Mail;
+using FPTPlaygroundServer.Services.Notifications;
+using FPTPlaygroundServer.Services.Payment;
 using FPTPlaygroundServer.Services.Server;
 using FPTPlaygroundServer.Services.VerifyCode;
 
@@ -14,5 +16,7 @@ public static class ServicesExtensions
         services.AddScoped<CurrentUserService>();
         services.AddScoped<CurrentServerService>();
         services.AddScoped<TokenService>();
+        services.AddScoped<PayOSPaymentSerivce>();
+        services.AddScoped<FCMNotificationService>();
     }
 }

@@ -38,12 +38,16 @@ public class UpdateUserLevel : ControllerBase
         Description = "This API is for user level up."
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] CurrentUserService currentUserService)
     {
         var user = await currentUserService.GetCurrentUser();
+        if (user!.Status == UserStatus.Inactive || user.Account.Status != AccountStatus.Active)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("user", "Account have been inactive or not deactivate")
+                .Build();
+        }
 
         var userLevelPass = await context.UserLevelPasses
             .Include(ulp => ulp.LevelPass)

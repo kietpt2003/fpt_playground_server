@@ -33,5 +33,14 @@ public static class ApplyMigrationsExtensions
             }
             await context.SaveChangesAsync();
         }
+
+        if (!await context.FaceValues.AnyAsync())
+        {
+            foreach (var faceValue in FaceValueSeed.Default)
+            {
+                context.FaceValues.Add(faceValue);
+            }
+            await context.SaveChangesAsync();
+        }
     }
 }

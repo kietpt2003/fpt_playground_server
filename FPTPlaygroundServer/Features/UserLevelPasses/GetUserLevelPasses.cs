@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using FPTPlaygroundServer.Features.UserLevelPasses.Mappers;
 using FPTPlaygroundServer.Features.UserLevelPasses.Models;
+using FPTPlaygroundServer.Common.Exceptions;
 
 namespace FPTPlaygroundServer.Features.UserLevelPasses;
 
@@ -32,6 +33,13 @@ public class GetUserLevelPasses : ControllerBase
     public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context, [FromServices] CurrentUserService currentUserService)
     {
         var user = await currentUserService.GetCurrentUser();
+        if (user!.Status == UserStatus.Inactive || user.Account.Status != AccountStatus.Active)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("user", "Account have been inactive or not deactivate")
+                .Build();
+        }
 
         var query = context.UserLevelPasses
             .Include(ulp => ulp.LevelPass)

@@ -36,15 +36,21 @@ public class UserCheckin : ControllerBase
         Description = "This API is for user checkin."
     )]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(FPTPlaygroundErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Handler([FromBody] Request request, [FromServices] AppDbContext context, [FromServices] CurrentUserService currentUserService)
     {
         DateTime currentTime = DateTime.UtcNow; //Giờ UTC hiện tại
         DateTime checkInDate = DateTime.UtcNow.Date; // 00:00 AM UTC <=> 07:00 AM VN
         DateTime startCheckin = checkInDate.AddHours(7); // 07:00 AM UTC
         DateTime endOfDay = checkInDate.AddDays(1).AddSeconds(-1); // 23:59:59 PM UT
+
+        var user = await currentUserService.GetCurrentUser();
+        if (user!.Status == UserStatus.Inactive || user.Account.Status != AccountStatus.Active)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("user", "Account have been inactive or not deactivate")
+                .Build();
+        }
 
         if (currentTime < startCheckin || currentTime > endOfDay) //Nằm trong khoảng 7h UTC -> 23:59:59 PM UTC
         {
@@ -53,8 +59,6 @@ public class UserCheckin : ControllerBase
                 .AddReason("dailyCheckpoint", "Checkin time starts from 7 AM to 11:59 PM (UTC) the same day")
                 .Build();
         }
-
-        var user = await currentUserService.GetCurrentUser();
 
         var userDailyCheckpoint = await context.DailyCheckpoints.FirstOrDefaultAsync(dcp => dcp.Id == request.DailyCheckpointId && dcp.UserId == user!.Id) ?? throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_00)
