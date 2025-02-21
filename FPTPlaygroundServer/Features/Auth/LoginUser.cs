@@ -126,7 +126,10 @@ public class LoginaccountController : ControllerBase
         }
         else //TH đổi login mà chưa có user thì trả về token ko có userId để vô trang RegisterUser
         {
-            TokenRequest tokenRequest = new() { Email = request.Email };
+            TokenRequest tokenRequest = new() { 
+                Email = request.Email,
+                Role = Role.User
+            };
             token = tokenService.CreateToken(tokenRequest);
             refreshToken = tokenService.CreateRefreshToken(tokenRequest);
         }

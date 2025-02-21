@@ -10,9 +10,9 @@ public class PageRequest
     public int? PageSize { get; set; }
 }
 
-public class PageRequestValidator<T> : AbstractValidator<T> where T : PageRequest
+public class PagedRequestValidator<T> : AbstractValidator<T> where T : PageRequest
 {
-    public PageRequestValidator()
+    public PagedRequestValidator()
     {
         RuleFor(x => x.Page).GreaterThan(0);
         RuleFor(x => x.PageSize)

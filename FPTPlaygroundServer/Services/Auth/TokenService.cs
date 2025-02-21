@@ -130,7 +130,10 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
             }
             else
             {
-                TokenRequest tokenRequest = new() { Email = tokenInfo!.Email };
+                TokenRequest tokenRequest = new() { 
+                    Email = tokenInfo!.Email,
+                    Role = Role.User
+                };
                 tokenResponse = CreateToken(tokenRequest);
                 refreshToken = CreateRefreshToken(tokenRequest);
             }

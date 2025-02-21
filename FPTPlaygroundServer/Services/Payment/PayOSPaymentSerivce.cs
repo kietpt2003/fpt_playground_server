@@ -15,16 +15,12 @@ public class PayOSPaymentSerivce(IOptions<PayOSSettings> payOSSettings, CurrentS
 
     public async Task<string> CreatePaymentAsync(PayOSPayment payment)
     {
-        //Create list item for payment link
-        List<ItemData> items = new List<ItemData>()!;
-        items.Add(new ItemData("FPT Playground payment", 1, payment.Amount));
-
         var request = new PayOSPaymentRequest
         {
             OrderCode = payment.PaymentReferenceId,
             Amount = payment.Amount,
             Description = payment.Info ?? DefaultOrderInfo,
-            Items = items,
+            Items = payment.PaymentItems,
             CancelUrl = payment.ReturnUrl,
             ReturnUrl = payment.ReturnUrl,
         };

@@ -2,56 +2,58 @@
 using FPTPlaygroundServer.Common.Paginations;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
-using FPTPlaygroundServer.Features.Servers.Mappers;
+using FPTPlaygroundServer.Features.FaceValues.Mappers;
 using FPTPlaygroundServer.Features.Servers.Models;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Linq.Expressions;
 
-namespace FPTPlaygroundServer.Features.Servers;
+namespace FPTPlaygroundServer.Features.FaceValues;
 
 [ApiController]
+[JwtValidationFilter]
 [RequestValidation<Request>]
-public class GetServers : ControllerBase
+public class GetFaceValues : ControllerBase
 {
     public new class Request : PageRequest
     {
-        public string? Name { get; set; }
-        public SortDir? SortOrder { get; set; }
+        public SortDir SortOrder { get; set; }
         public string? SortColumn { get; set; }
     }
 
     public class RequestValidator : PagedRequestValidator<Request>;
 
-    [HttpGet("servers")]
-    [Tags("Server")]
-    [SwaggerOperation(Summary = "Get Servers",
+    [HttpGet("face-values")]
+    [Tags("FaceValue")]
+    [SwaggerOperation(Summary = "Get Face Values",
         Description = """
-        This API is for retrieving servers
+        This API is for retrieving face values
 
-        `SortColumn` (optional): name
+        `SortColumn` (optional): coinValue, diamondValue, vndValue, createdAt
         """
     )]
     [ProducesResponseType(typeof(PageList<ServerResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context)
     {
-        var query = context.Servers.AsQueryable();
+        var query = context.FaceValues.AsQueryable();
 
         query = query.OrderByColumn(GetSortProperty(request), request.SortOrder);
 
         var response = await query
-            .Where(c => c.Name.Contains(request.Name ?? ""))
-            .Select(c => c.ToServerResponse())
+            .Select(c => c.ToFaceValueResponse())
             .ToPagedListAsync(request);
 
         return Ok(response);
     }
 
-    private static Expression<Func<Server, object>> GetSortProperty(Request request)
+    private static Expression<Func<FaceValue, object>> GetSortProperty(Request request)
     {
         return request.SortColumn?.ToLower() switch
         {
-            "name" => c => c.Name,
+            "coinvalue" => c => c.CoinValue,
+            "diamondvalue" => c => c.DiamondValue,
+            "vndvalue" => c => c.VNDValue,
+            "createdat" => c => c.CreatedAt,
             _ => c => c.Id
         };
     }

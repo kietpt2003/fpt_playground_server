@@ -68,7 +68,11 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
                 .Build();
             }
 
-            var tokenInfo = new TokenRequest { UserId = jObject["UserId"]?.ToObject<Guid?>(), Email = jObject["Email"]!.ToString() };
+            var tokenInfo = new TokenRequest { 
+                UserId = jObject["UserId"]?.ToObject<Guid?>(), 
+                Email = jObject["Email"]!.ToString(), 
+                Role = Enum.TryParse(jObject["Role"]?.ToString(), out Role role) ? role : Role.User
+            };
 
             return await context.Users
                 .Include(u => u.Account)

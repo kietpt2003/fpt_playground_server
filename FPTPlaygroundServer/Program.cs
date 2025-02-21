@@ -72,6 +72,7 @@ builder.Services.AddControllerServices();
 builder.Services.AddSwaggerServices();
 
 builder.Services.AddBackgroundServices();
+builder.Services.AddSignalRService();
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
@@ -81,6 +82,9 @@ builder.Services.AddServices();
 builder.Services.AddCorsPolicy();
 builder.Services.AddConfigureApiBehavior();
 builder.Services.AddFPTPlaygroundRateLimiter();
+builder.Services.AddSingletonForSignalR();
+builder.Services.AddAuthenticationForSignalR(builder.Configuration);
+builder.Services.AddAuthorizationForSignalR();
 
 var app = builder.Build();
 
@@ -93,5 +97,6 @@ app.UseAuthorization();
 app.ApplyMigrations();
 
 app.MapControllers().RequireRateLimiting("concurrency");
+app.UseGroupChatHubHandler();
 
 app.Run();

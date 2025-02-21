@@ -16,12 +16,15 @@ namespace FPTPlaygroundServer.Features.UserLevelPasses;
 [ApiController]
 [JwtValidationFilter]
 [RolesFilter(Role.User)]
+[RequestValidation<Request>]
 public class GetUserLevelPasses : ControllerBase
 {
     public new class Request : PageRequest
     {
         public SortDir SortByLevel { get; set; }
     }
+
+    public class RequestValidator : PagedRequestValidator<Request>;
 
     [HttpGet("user-level-passes")]
     [Tags("UserLevelPasses")]

@@ -11,6 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using FPTPlaygroundServer.Features.Payments.Models;
 using FPTPlaygroundServer.Services.Payment;
 using FPTPlaygroundServer.Services.Notifications;
+using Net.payOS.Types;
 
 namespace FPTPlaygroundServer.Features.Payments;
 
@@ -88,6 +89,14 @@ public class CreatePayment : ControllerBase
                 .Build();
         }
 
+        if (faceValue.Quantity <= 0)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_02)
+                .AddReason("faceValue", "No more redemptions. Please come back tomorrow.")
+                .Build();
+        }
+
         var paymentExist = await context.WalletTrackings.FirstOrDefaultAsync(wt => wt.CoinWalletId == user.CoinWallet!.Id && wt.DiamondWalletId == user.DiamondWallet!.Id && WalletTrackingStatus.Pending == wt.Status);
         if (paymentExist != null)
         {
@@ -116,11 +125,24 @@ public class CreatePayment : ControllerBase
             PaymentCode = payOSPaymentCode,
         };
 
+        List<ItemData> paymentItems = new List<ItemData>()!;
+        if (faceValue.CoinValue != 0 && faceValue.DiamondValue == 0)
+        {
+            paymentItems.Add(new ItemData($"{faceValue.CoinValue} Coins", 1, faceValue.VNDValue));
+        } else if (faceValue.CoinValue == 0 && faceValue.DiamondValue != 0)
+        {
+            paymentItems.Add(new ItemData($"{faceValue.DiamondValue} Diamonds", 1, faceValue.VNDValue));
+        } else
+        {
+            paymentItems.Add(new ItemData($"{faceValue.CoinValue} Coins + {faceValue.DiamondValue} Diamonds", 1, faceValue.VNDValue));
+        }
+
         PayOSPayment payOSPayment = new()
         {
             PaymentReferenceId = payOSPaymentCode,
             Amount = faceValue.VNDValue,
             Info = request.Info,
+            PaymentItems = paymentItems,
             ReturnUrl = request.ReturnUrl,
         }!;
 
@@ -129,6 +151,7 @@ public class CreatePayment : ControllerBase
             DepositUrl = await payOSPaymentSerivce.CreatePaymentAsync(payOSPayment)
         };
         await context.WalletTrackings.AddAsync(walletTracking);
+        faceValue.Quantity -= 1;
         await context.SaveChangesAsync();
 
         try

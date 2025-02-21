@@ -94,7 +94,10 @@ public class ChangeServer : ControllerBase
                .FirstOrDefaultAsync(u => u.Id == jObject["UserId"]!.ToObject<Guid?>() && u.ServerId == request.ServerId);
             if (user == null) //TH nếu không có user (có userId hoặc không có userId nhưng không có user trong server đó) => trả về token không có userId
             {
-                TokenRequest tokenRequest = new() { Email = jObject["Email"]!.ToString() };
+                TokenRequest tokenRequest = new() { 
+                    Email = jObject["Email"]!.ToString(),
+                    Role = Enum.TryParse(jObject["Role"]?.ToString(), out Role role) ? role : Role.User
+                };
                 tokenResponse = tokenService.CreateToken(tokenRequest);
                 refreshToken = tokenService.CreateRefreshToken(tokenRequest);
             }
@@ -126,7 +129,10 @@ public class ChangeServer : ControllerBase
 
             if (serverUser == null) //TH đổi sang server khác mà chưa có user thì trả về token ko có userId để vô trang RegisterUser
             {
-                TokenRequest tokenRequest = new() { Email = account.Email };
+                TokenRequest tokenRequest = new() { 
+                    Email = account.Email,
+                    Role = Enum.TryParse(jObject["Role"]?.ToString(), out Role role) ? role : Role.User
+                };
                 tokenResponse = tokenService.CreateToken(tokenRequest);
                 refreshToken = tokenService.CreateRefreshToken(tokenRequest);
             }

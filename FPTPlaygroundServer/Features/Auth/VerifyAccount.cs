@@ -69,7 +69,10 @@ public class VerifyAccountController: ControllerBase
             await context.SaveChangesAsync();
         }
 
-        TokenRequest tokenRequest = new() { Email = request.Email };
+        TokenRequest tokenRequest = new() { 
+            Email = request.Email,
+            Role = Role.User
+        };
         string token = tokenService.CreateToken(tokenRequest);
         string refreshToken = tokenService.CreateRefreshToken(tokenRequest);
 

@@ -90,7 +90,10 @@ public class LoginGoogleController : ControllerBase
                 context.Accounts.Add(registerAccountRequest.ToAccountRequest()!);
                 await context.SaveChangesAsync();
 
-                TokenRequest tokenRequest = new() { Email = ggResponse!.Email };
+                TokenRequest tokenRequest = new() { 
+                    Email = ggResponse!.Email,
+                    Role = Role.User
+                };
                 string token = tokenService.CreateToken(tokenRequest);
                 string refreshToken = tokenService.CreateRefreshToken(tokenRequest);
 
@@ -131,7 +134,10 @@ public class LoginGoogleController : ControllerBase
                 }
                 else
                 {
-                    TokenRequest tokenRequest = new() { Email = ggResponse!.Email };
+                    TokenRequest tokenRequest = new() { 
+                        Email = ggResponse!.Email,
+                        Role = Role.User
+                    };
                     token = tokenService.CreateToken(tokenRequest);
                     refreshToken = tokenService.CreateRefreshToken(tokenRequest);
                 }
