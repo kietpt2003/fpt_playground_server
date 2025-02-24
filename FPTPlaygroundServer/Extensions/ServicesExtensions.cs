@@ -2,6 +2,7 @@
 using FPTPlaygroundServer.Services.Mail;
 using FPTPlaygroundServer.Services.Notifications;
 using FPTPlaygroundServer.Services.Payment;
+using FPTPlaygroundServer.Services.Redis;
 using FPTPlaygroundServer.Services.Server;
 using FPTPlaygroundServer.Services.VerifyCode;
 
@@ -18,5 +19,6 @@ public static class ServicesExtensions
         services.AddScoped<TokenService>();
         services.AddScoped<PayOSPaymentSerivce>();
         services.AddScoped<FCMNotificationService>();
+        services.AddScoped<RedisGetSetService>();
     }
 }

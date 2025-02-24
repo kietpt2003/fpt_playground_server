@@ -8,7 +8,7 @@ if (builder.Environment.IsProduction())
     var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
     if (!string.IsNullOrEmpty(dbConnectionString))
     {
-        builder.Configuration["ConnectionStrings:DefaultConnection"] = dbConnectionString;
+        builder.Configuration["ConnectionStrings:PostGreSQL"] = dbConnectionString;
     }
 
     var jwtIssuerString = Environment.GetEnvironmentVariable("JWT_ISSUER");
@@ -85,6 +85,7 @@ builder.Services.AddFPTPlaygroundRateLimiter();
 builder.Services.AddSingletonForSignalR();
 builder.Services.AddAuthenticationForSignalR(builder.Configuration);
 builder.Services.AddAuthorizationForSignalR();
+builder.Services.AddStackExchangeRedisCacheForRedis(builder.Configuration);
 
 var app = builder.Build();
 

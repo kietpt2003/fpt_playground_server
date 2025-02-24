@@ -9,7 +9,7 @@ public static class DbConnectionExtensions
     {
         services.AddDbContext<AppDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+            options.UseNpgsql(configuration.GetConnectionString("PostGreSQL"),
                 o =>
                 {
                     o.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
