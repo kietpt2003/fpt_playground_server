@@ -33,7 +33,8 @@ jobs:
                       --file FPTPlaygroundServer/Dockerfile \
                       --tag kietmaster2003/fptplayground-prod \
                       --push \
-                      --build-arg DB_CONNECTION_STRING="${{ secrets.DB_CONNECTION_STRING }}" \
+                      --build-arg DB_POSTGRES_CONNECTION_STRING="${{ secrets.DB_POSTGRES_CONNECTION_STRING }}" \
+                      --build-arg DB_REDIS_CONNECTION_STRING="${{ secrets.DB_REDIS_CONNECTION_STRING }}" \
                       --build-arg JWT_ISSUER="${{ secrets.JWT_ISSUER }}" \
                       --build-arg JWT_AUDIENCE="${{ secrets.JWT_AUDIENCE }}" \
                       --build-arg JWT_SIGNING_KEY="${{ secrets.JWT_SIGNING_KEY }}" \

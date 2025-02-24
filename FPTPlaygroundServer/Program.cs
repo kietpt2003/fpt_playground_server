@@ -5,10 +5,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsProduction())
 {
-    var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-    if (!string.IsNullOrEmpty(dbConnectionString))
+    var dbPostGresConnectionString = Environment.GetEnvironmentVariable("DB_POSTGRES_CONNECTION_STRING");
+    if (!string.IsNullOrEmpty(dbPostGresConnectionString))
     {
-        builder.Configuration["ConnectionStrings:PostGreSQL"] = dbConnectionString;
+        builder.Configuration["ConnectionStrings:PostGreSQL"] = dbPostGresConnectionString;
+    }
+
+    var dbRedisConnectionString = Environment.GetEnvironmentVariable("DB_REDIS_CONNECTION_STRING");
+    if (!string.IsNullOrEmpty(dbRedisConnectionString))
+    {
+        builder.Configuration["ConnectionStrings:Redis"] = dbRedisConnectionString;
     }
 
     var jwtIssuerString = Environment.GetEnvironmentVariable("JWT_ISSUER");
