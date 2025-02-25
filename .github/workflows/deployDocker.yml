@@ -16,7 +16,7 @@ jobs:
               run: |
                   cd FPTPlaygroundServer
                   mkdir -p Credentials  # Create folder "Credentials" if not exist
-                  echo "${{ secrets.ACCOUNT_SERVICE }}" | base64 --decode > Credentials/account-service.json
+                  echo "${{ secrets.ACCOUNT_SERVICE }}" | base64 --decode > Credentials/account_service.json
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
