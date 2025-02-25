@@ -10,7 +10,6 @@ public class UserMasked
 
     public MaskedAvatar MaskedAvatar { get; set; } = default!;
     public User User { get; set; } = default!;
-    public ICollection<ConversationMember> ConversationMembers { get; set; } = [];
     public ICollection<Message> Messages { get; set; } = [];
     public ICollection<MessageStatus> MessageStatuses { get; set; } = [];
 }

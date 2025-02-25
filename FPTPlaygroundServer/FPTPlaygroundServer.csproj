@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <Folder Include="Credentials\" />
+    <Folder Include="Features\FriendShips\" />
   </ItemGroup>
 
 </Project>

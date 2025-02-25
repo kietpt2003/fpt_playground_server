@@ -47,7 +47,7 @@ public class CreatePayment : ControllerBase
     [Tags("Payments")]
     [SwaggerOperation(
         Summary = "Create Payment",
-        Description = "This API is for user create payment. Note: "
+        Description = "This API is for user create payment."
     )]
     [ProducesResponseType(typeof(DepositResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Handler(

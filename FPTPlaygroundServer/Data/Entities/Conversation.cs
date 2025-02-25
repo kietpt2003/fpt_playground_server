@@ -3,6 +3,7 @@
 public class Conversation
 {
     public Guid Id { get; set; }
+    public int? ConversationIndex { get; set; }
     public string Name { get; set; } = default!;
     public ConversationType Type { get; set; }
     public string? GroupImageUrl { get; set; }

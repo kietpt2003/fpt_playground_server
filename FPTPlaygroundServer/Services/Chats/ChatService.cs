@@ -2,9 +2,9 @@
 using Newtonsoft.Json;
 using FPTPlaygroundServer.Services.Auth.Models;
 
-namespace FPTPlaygroundServer.Services.GroupChats;
+namespace FPTPlaygroundServer.Services.Chats;
 
-public class GroupChatService : IUserIdProvider
+public class ChatService : IUserIdProvider
 {
     public string GetUserId(HubConnectionContext connection)
     {

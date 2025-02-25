@@ -3,6 +3,7 @@ using System;
 using FPTPlaygroundServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FPTPlaygroundServer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250224104154_UpdateMessageStatusEntity")]
+    partial class UpdateMessageStatusEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -158,9 +161,6 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int?>("ConversationIndex")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -203,11 +203,7 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("UPdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UserId")
@@ -910,7 +906,7 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .HasForeignKey("UserId");
 
                     b.HasOne("FPTPlaygroundServer.Data.Entities.UserMasked", "UserMasked")
-                        .WithMany()
+                        .WithMany("ConversationMembers")
                         .HasForeignKey("UserMaskedId");
 
                     b.Navigation("Conversation");
@@ -1283,6 +1279,8 @@ namespace FPTPlaygroundServer.Data.Migrations
 
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.UserMasked", b =>
                 {
+                    b.Navigation("ConversationMembers");
+
                     b.Navigation("MessageStatuses");
 
                     b.Navigation("Messages");

@@ -24,8 +24,7 @@ public class RoleRestrictHubRequirement : AuthorizationHandler<RoleRestrictHubRe
         return Task.CompletedTask;
     }
 
-    private static bool IsUserAllowedToDoThis(string hubMethodName,
-        string userRole)
+    private static bool IsUserAllowedToDoThis(string hubMethodName, string userRole)
     {
         if (userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
         {

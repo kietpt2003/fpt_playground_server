@@ -8,13 +8,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace FPTPlaygroundServer.Features.GroupChats;
+namespace FPTPlaygroundServer.Features.Chats;
 
 [ApiController]
 [JwtValidationFilter]
 [RolesFilter(Role.User)]
 [RequestValidation<Request>]
-public class GroupChatTestGroup(IHubContext<GroupChatHub> hub) : ControllerBase
+public class ChatTestGroup(IHubContext<ChatHub> hub) : ControllerBase
 {
     public new class Request
     {
@@ -31,7 +31,7 @@ public class GroupChatTestGroup(IHubContext<GroupChatHub> hub) : ControllerBase
         }
     }
 
-    [HttpPost("group-chat/group")]
+    [HttpPost("chat/group")]
     [Tags("Test Chat")]
     [SwaggerOperation(
         Summary = "Test Sending Group Chat",

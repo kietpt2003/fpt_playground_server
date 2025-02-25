@@ -17,6 +17,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
 {
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
     private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(jwtSettings.Value.SigningKey));
+    private readonly AppDbContext _context = context;
 
     public async Task<User?> GetCurrentUser()
     {
@@ -74,7 +75,7 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor, IOptio
                 Role = Enum.TryParse(jObject["Role"]?.ToString(), out Role role) ? role : Role.User
             };
 
-            return await context.Users
+            return await _context.Users
                 .Include(u => u.Account)
                     .ThenInclude(a => a.Devices)
                 .Include(u => u.Specialize)

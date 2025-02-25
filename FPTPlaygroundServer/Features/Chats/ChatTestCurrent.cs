@@ -8,13 +8,13 @@ using FPTPlaygroundServer.Services.Auth;
 using Swashbuckle.AspNetCore.Annotations;
 using FPTPlaygroundServer.Common.Exceptions;
 
-namespace FPTPlaygroundServer.Features.GroupChats;
+namespace FPTPlaygroundServer.Features.Chats;
 
 [ApiController]
 [JwtValidationFilter]
 [RolesFilter(Role.User)]
 [RequestValidation<Request>]
-public class GroupChatTestCurrent(IHubContext<GroupChatHub> hub) : ControllerBase
+public class ChatTestCurrent(IHubContext<ChatHub> hub) : ControllerBase
 {
     public new class Request
     {
@@ -31,7 +31,7 @@ public class GroupChatTestCurrent(IHubContext<GroupChatHub> hub) : ControllerBas
         }
     }
 
-    [HttpPost("group-chat/current")]
+    [HttpPost("chat/current")]
     [Tags("Test Chat")]
     [SwaggerOperation(
         Summary = "Test Sending Personal Chat",

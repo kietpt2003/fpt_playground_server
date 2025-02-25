@@ -1,7 +1,7 @@
 ﻿using FPTPlaygroundServer.Common.Filters;
 using FPTPlaygroundServer.Common.Settings;
-using FPTPlaygroundServer.Features.GroupChats;
-using FPTPlaygroundServer.Services.GroupChats;
+using FPTPlaygroundServer.Features.Chats;
+using FPTPlaygroundServer.Services.Chats;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
@@ -9,11 +9,11 @@ using System.Text;
 
 namespace FPTPlaygroundServer.Extensions;
 
-public static class GroupChatHubExtensions
+public static class ChatHubExtensions
 {
-    public static void UseGroupChatHubHandler(this IEndpointRouteBuilder app)
+    public static void UseChatHubHandler(this IEndpointRouteBuilder app)
     {
-        app.MapHub<GroupChatHub>("group-chat/hub");
+        app.MapHub<ChatHub>("chat/hub");
     }
 
     public static void AddSignalRService(this IServiceCollection services)
@@ -68,6 +68,6 @@ public static class GroupChatHubExtensions
 
     public static void AddSingletonForSignalR(this IServiceCollection services)
     {
-        services.AddSingleton<IUserIdProvider, GroupChatService>();
+        services.AddSingleton<IUserIdProvider, ChatService>();
     }
 }

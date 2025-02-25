@@ -6,7 +6,7 @@ namespace FPTPlaygroundServer.Features.Pings;
 [ApiController]
 public class PingServer : ControllerBase
 {
-    [HttpPost("ping")]
+    [HttpGet("ping")]
     [Tags("Ping")]
     [SwaggerOperation(
         Summary = "Ping Server",

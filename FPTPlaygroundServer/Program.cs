@@ -3,6 +3,8 @@ using FPTPlaygroundServer.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", @"Credentials/account_service.json");
+
 if (builder.Environment.IsProduction())
 {
     var dbPostGresConnectionString = Environment.GetEnvironmentVariable("DB_POSTGRES_CONNECTION_STRING");
@@ -91,7 +93,8 @@ builder.Services.AddFPTPlaygroundRateLimiter();
 builder.Services.AddSingletonForSignalR();
 builder.Services.AddAuthenticationForSignalR(builder.Configuration);
 builder.Services.AddAuthorizationForSignalR();
-builder.Services.AddStackExchangeRedisCacheForRedis(builder.Configuration);
+//builder.Services.AddStackExchangeRedisCacheForRedis(builder.Configuration);
+builder.Services.ConnectionMultiplexerForRedis(builder.Configuration);
 
 var app = builder.Build();
 
@@ -104,6 +107,6 @@ app.UseAuthorization();
 app.ApplyMigrations();
 
 app.MapControllers().RequireRateLimiting("concurrency");
-app.UseGroupChatHubHandler();
+app.UseChatHubHandler();
 
 app.Run();

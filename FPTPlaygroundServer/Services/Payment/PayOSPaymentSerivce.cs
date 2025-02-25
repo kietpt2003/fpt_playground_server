@@ -1,5 +1,4 @@
 ﻿using FPTPlaygroundServer.Common.Settings;
-using FPTPlaygroundServer.Services.Server;
 using FPTPlaygroundServer.Services.Payment.Models;
 using Microsoft.Extensions.Options;
 using Net.payOS.Types;
@@ -7,7 +6,7 @@ using Net.payOS;
 
 namespace FPTPlaygroundServer.Services.Payment;
 
-public class PayOSPaymentSerivce(IOptions<PayOSSettings> payOSSettings, CurrentServerService currentServerService)
+public class PayOSPaymentSerivce(IOptions<PayOSSettings> payOSSettings)
 {
     private const string DefaultOrderInfo = "Pay with PayOS";
 
