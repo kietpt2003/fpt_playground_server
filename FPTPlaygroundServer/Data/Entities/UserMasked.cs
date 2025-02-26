@@ -7,7 +7,6 @@ public class UserMasked
     public Guid UserId { get; set; }
     public UserMaskedStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
-
     public MaskedAvatar MaskedAvatar { get; set; } = default!;
     public User User { get; set; } = default!;
     public ICollection<Message> Messages { get; set; } = [];

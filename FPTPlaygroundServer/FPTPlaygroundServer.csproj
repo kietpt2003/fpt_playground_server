@@ -37,7 +37,8 @@
 
   <ItemGroup>
     <Folder Include="Credentials\" />
-    <Folder Include="Features\FriendShips\" />
+    <Folder Include="Data\Migrations\" />
+    <Folder Include="Features\Mates\" />
   </ItemGroup>
 
 </Project>

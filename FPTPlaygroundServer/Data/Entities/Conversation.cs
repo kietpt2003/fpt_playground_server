@@ -17,10 +17,10 @@ public class Conversation
 
 public enum ConversationType
 {
-    StudyGroup, DatingGroup, CuriousGroup, Personal, Dating
+    StudyGroup, DatingGroup, CuriousGroup, Personal, Dating, Friendship
 }
 
 public enum ConversationStatus
 {
-    Active, Inactive
+    Active, Inactive, Closed
 }

@@ -38,8 +38,8 @@ public class CreateConversation : ControllerBase
                 .GreaterThanOrEqualTo(0)
                 .WithMessage("ConversationIndex must be greater than or equal to 0");
             RuleFor(c => c.Type)
-                .Must(type => type != ConversationType.Personal && type != ConversationType.Dating)
-                .WithMessage("Type cannot be Personal or Dating");
+                .Must(type => type != ConversationType.Personal && type != ConversationType.Dating && type != ConversationType.Friendship)
+                .WithMessage("Type cannot be Personal or Dating or Friendship");
         }
     }
 
@@ -72,7 +72,7 @@ public class CreateConversation : ControllerBase
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_03)
-                .AddReason("user", "Account have been inactive or not deactivate")
+                .AddReason("user", "Your account have been inactive or not deactivate")
                 .Build();
         }
 
@@ -94,7 +94,8 @@ public class CreateConversation : ControllerBase
                 (cm.UserId == user.Id || (cm.UserMasked != null && cm.UserMasked.UserId == user.Id)) &&
                 cm.Role == ConversationMemberRole.Owner &&
                 cm.Conversation.Type != ConversationType.Personal &&
-                cm.Conversation.Type != ConversationType.Dating
+                cm.Conversation.Type != ConversationType.Dating &&
+                cm.Conversation.Type != ConversationType.Friendship
                 ).ToListAsync();
 
             if (conversationMembers.Count >= 3)
@@ -138,6 +139,12 @@ public class CreateConversation : ControllerBase
                     JoinedAt = currentTime,
                     UpdatedAt = currentTime,
                 };
+                Message sysMsg = new()
+                {
+                    Conversation = conversation,
+                    Type = MessageType.System,
+                    CreatedAt = currentTime,
+                };
 
                 if (request.MaskedAvatarId is not null)
                 {
@@ -150,10 +157,17 @@ public class CreateConversation : ControllerBase
                     };
 
                     currentUser.UserMasked = userMasked;
+
+                    var maskedAvatar = await context.MaskedAvatars.FirstOrDefaultAsync(ma => ma.Id == request.MaskedAvatarId);
+                    sysMsg.Content = $"{maskedAvatar!.MaskedName} created the group";
+                } else
+                {
+                    sysMsg.Content = $"{user.UserName} created the group";
                 }
 
                 currentUser.Conversation = conversation;
                 await context.ConversationMembers.AddAsync(currentUser);
+                await context.Messages.AddAsync(sysMsg);
 
                 // Lưu tất cả vào database
                 await context.SaveChangesAsync();

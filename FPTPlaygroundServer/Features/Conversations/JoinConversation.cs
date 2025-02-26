@@ -45,7 +45,7 @@ public class JoinConversation : ControllerBase
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_03)
-                .AddReason("user", "Account have been inactive or not deactivate")
+                .AddReason("user", "Your account have been inactive or not deactivate")
                 .Build();
         }
         var conversation = await context.Conversations.FirstOrDefaultAsync(c => c.Id == ConversationId) ?? throw FPTPlaygroundException.NewBuilder()
@@ -61,7 +61,7 @@ public class JoinConversation : ControllerBase
                 .Build();
         }
 
-        if (conversation.Type == ConversationType.Personal || conversation.Type == ConversationType.Dating)
+        if (conversation.Type == ConversationType.Personal || conversation.Type == ConversationType.Dating || conversation.Type == ConversationType.Friendship)
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPA_01)
@@ -173,6 +173,12 @@ public class JoinConversation : ControllerBase
                     JoinedAt = currentTime,
                     UpdatedAt = currentTime,
                 };
+                Message sysMsg = new()
+                {
+                    ConversationId = ConversationId,
+                    Type = MessageType.System,
+                    CreatedAt = currentTime,
+                };
 
                 if (request.MaskedAvatarId is not null)
                 {
@@ -195,9 +201,16 @@ public class JoinConversation : ControllerBase
                     };
 
                     conversationMember.UserMasked = userMasked;
+
+                    var maskedAvatar = await context.MaskedAvatars.FirstOrDefaultAsync(ma => ma.Id == request.MaskedAvatarId);
+                    sysMsg.Content = $"{maskedAvatar!.MaskedName} joined the group";
+                } else
+                {
+                    sysMsg.Content = $"{user.UserName} joined the group";
                 }
 
                 await context.ConversationMembers.AddAsync(conversationMember);
+                await context.Messages.AddAsync(sysMsg);
 
                 // Lưu tất cả vào database
                 await context.SaveChangesAsync();

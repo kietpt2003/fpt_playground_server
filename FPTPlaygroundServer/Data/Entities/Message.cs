@@ -18,5 +18,5 @@ public class Message
 
 public enum MessageType
 {
-    Text, Image
+    Text, Image, System
 }

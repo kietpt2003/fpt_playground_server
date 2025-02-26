@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FPTPlaygroundServer.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250210071036_AddNewEntities")]
-    partial class AddNewEntities
+    [Migration("20250226132412_UpdateEntitiesV1")]
+    partial class UpdateEntitiesV1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,6 +30,9 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -49,6 +52,9 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -149,6 +155,81 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.ToTable("CoinWallets");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ConversationIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GroupImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Conversations");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.ConversationMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserMaskedId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserMaskedId");
+
+                    b.ToTable("ConversationMembers");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.DailyCheckpoint", b =>
                 {
                     b.Property<Guid>("Id")
@@ -246,6 +327,9 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -273,12 +357,20 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("FriendId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("UserId");
 
@@ -334,6 +426,35 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.ToTable("LevelPasses");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.MaskedAvatar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MaskedName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MaskedAvatars");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Mate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -360,6 +481,105 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Mates");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SenderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UserMaskedId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("UserMaskedId");
+
+                    b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.MessageStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReceiverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserMaskedId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("UserMaskedId");
+
+                    b.ToTable("MessageStatuses");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Report", b =>
@@ -406,6 +626,9 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -563,11 +786,42 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Property<int>("Experience")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsClaim")
+                        .HasColumnType("boolean");
+
                     b.HasKey("UserId", "LevelPassId");
 
                     b.HasIndex("LevelPassId");
 
                     b.ToTable("UserLevelPasses");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.UserMasked", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("MaskedAvatarId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaskedAvatarId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMaskeds");
                 });
 
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.WalletTracking", b =>
@@ -654,6 +908,29 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.ConversationMember", b =>
+                {
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.Conversation", "Conversation")
+                        .WithMany("ConversationMembers")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
+                        .WithMany("ConversationMembers")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.UserMasked", "UserMasked")
+                        .WithMany()
+                        .HasForeignKey("UserMaskedId");
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("User");
+
+                    b.Navigation("UserMasked");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.DailyCheckpoint", b =>
                 {
                     b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
@@ -695,6 +972,12 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "UpdatedUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -702,6 +985,8 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Friend");
+
+                    b.Navigation("UpdatedUser");
 
                     b.Navigation("User");
                 });
@@ -734,6 +1019,63 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("User");
 
                     b.Navigation("YourMate");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Message", b =>
+                {
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "Sender")
+                        .WithMany("Messages")
+                        .HasForeignKey("SenderId");
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.UserMasked", "UserMasked")
+                        .WithMany("Messages")
+                        .HasForeignKey("UserMaskedId");
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("UserMasked");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.MessageStatus", b =>
+                {
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.Message", "Message")
+                        .WithMany("MessageStatuses")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "Receiver")
+                        .WithMany("MessageStatuses")
+                        .HasForeignKey("ReceiverId");
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.UserMasked", "UserMasked")
+                        .WithMany("MessageStatuses")
+                        .HasForeignKey("UserMaskedId");
+
+                    b.Navigation("Message");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("UserMasked");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Notification", b =>
+                {
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Report", b =>
@@ -838,6 +1180,25 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.UserMasked", b =>
+                {
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.MaskedAvatar", "MaskedAvatar")
+                        .WithMany("UserMaskeds")
+                        .HasForeignKey("MaskedAvatarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
+                        .WithMany("UserMaskeds")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MaskedAvatar");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.WalletTracking", b =>
                 {
                     b.HasOne("FPTPlaygroundServer.Data.Entities.CoinWallet", "CoinWallet")
@@ -875,6 +1236,13 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("WalletTrackings");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Conversation", b =>
+                {
+                    b.Navigation("ConversationMembers");
+
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.DiamondWallet", b =>
                 {
                     b.Navigation("WalletTrackings");
@@ -890,6 +1258,16 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("UserLevelPasses");
                 });
 
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.MaskedAvatar", b =>
+                {
+                    b.Navigation("UserMaskeds");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Message", b =>
+                {
+                    b.Navigation("MessageStatuses");
+                });
+
             modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.Server", b =>
                 {
                     b.Navigation("Users");
@@ -900,16 +1278,33 @@ namespace FPTPlaygroundServer.Data.Migrations
                     b.Navigation("CoinWallet")
                         .IsRequired();
 
+                    b.Navigation("ConversationMembers");
+
                     b.Navigation("DailyCheckpoints");
 
                     b.Navigation("DiamondWallet")
                         .IsRequired();
+
+                    b.Navigation("MessageStatuses");
+
+                    b.Navigation("Messages");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("UserAchievements");
 
                     b.Navigation("UserIncomes");
 
                     b.Navigation("UserLevelPasses");
+
+                    b.Navigation("UserMaskeds");
+                });
+
+            modelBuilder.Entity("FPTPlaygroundServer.Data.Entities.UserMasked", b =>
+                {
+                    b.Navigation("MessageStatuses");
+
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

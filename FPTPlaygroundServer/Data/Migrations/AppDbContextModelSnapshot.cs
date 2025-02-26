@@ -354,12 +354,20 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("FriendId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("UserId");
 
@@ -961,6 +969,12 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FPTPlaygroundServer.Data.Entities.User", "UpdatedUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("FPTPlaygroundServer.Data.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -968,6 +982,8 @@ namespace FPTPlaygroundServer.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Friend");
+
+                    b.Navigation("UpdatedUser");
 
                     b.Navigation("User");
                 });

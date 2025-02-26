@@ -48,7 +48,7 @@ public class UserCheckin : ControllerBase
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_03)
-                .AddReason("user", "Account have been inactive or not deactivate")
+                .AddReason("user", "Your account have been inactive or not deactivate")
                 .Build();
         }
 
