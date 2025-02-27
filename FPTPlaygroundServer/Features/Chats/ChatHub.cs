@@ -49,11 +49,11 @@ public class ChatHub(RedisService redisGetSetService) : Hub
             CreatedAt = DateTime.UtcNow,
         };
 
-        // Lưu vào Redis Queue
+        // Lưu vào Redis Queue, để background task save vào DB
         await _redisGetSetService.SaveMessageToQueueAsync(chatMessage);
 
-        // Gửi ngay qua SignalR
-        await Clients.Group(conversationId.ToString()).SendAsync("GroupMethod", chatMessage);
+        // Gửi ngay qua Redis Pub
+        await _redisGetSetService.PublishMessage(chatMessage);
     }
 
     private static bool IsImageUrl(string url)
