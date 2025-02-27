@@ -184,8 +184,19 @@ public class ResponseFriendshipRequest : ControllerBase
                     Console.WriteLine(ex.Message);
                 }
             }
-            else if (request.Status == FriendshipStatus.Cancelled || request.Status == FriendshipStatus.Unblocked)
+            else if (request.Status == FriendshipStatus.Cancelled)
             {
+                context.Friendships.Remove(friendship);
+                await context.SaveChangesAsync();
+            } else if (request.Status == FriendshipStatus.Unblocked)
+            {
+                if (friendship.UserId != user.Id)
+                {
+                    throw FPTPlaygroundException.NewBuilder()
+                    .WithCode(FPTPlaygroundErrorCode.FPV_00)
+                    .AddReason("friendship", "You cannot unblocked")
+                    .Build();
+                }
                 context.Friendships.Remove(friendship);
                 await context.SaveChangesAsync();
             }
