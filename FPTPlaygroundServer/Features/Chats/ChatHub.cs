@@ -19,10 +19,11 @@ public class ChatHub(RedisService redisGetSetService) : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, conversationId.ToString());
     }
 
-    public async Task SendMessage(Guid? senderId, Guid? maskedSenderId, Guid? receiverId, string content) //content can be image url or message
+    public async Task SendMessage(Guid? senderId, Guid? maskedSenderId, Guid? receiverId, Guid conversationId, string content) //content can be image url or message
     {
         var chatMessage = new Message
         {
+            ConversationId = conversationId,
             SenderId = senderId,
             UserMaskedId = maskedSenderId,
             Content = content,
@@ -40,6 +41,7 @@ public class ChatHub(RedisService redisGetSetService) : Hub
     {
         var chatMessage = new Message
         {
+            ConversationId = conversationId,
             SenderId = senderId,
             UserMaskedId = maskedSenderId,
             Content = content,
