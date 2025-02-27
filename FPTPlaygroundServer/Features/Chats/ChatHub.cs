@@ -1,5 +1,4 @@
-﻿using FPTPlaygroundServer.Data;
-using FPTPlaygroundServer.Data.Entities;
+﻿using FPTPlaygroundServer.Data.Entities;
 using FPTPlaygroundServer.Services.Redis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -27,7 +26,8 @@ public class ChatHub(RedisService redisGetSetService) : Hub
             SenderId = senderId,
             UserMaskedId = maskedSenderId,
             Content = content,
-            Type = IsImageUrl(content) ? MessageType.Image : MessageType.Text
+            Type = IsImageUrl(content) ? MessageType.Image : MessageType.Text,
+            CreatedAt = DateTime.UtcNow,
         };
 
         // Lưu vào Redis Queue
@@ -45,7 +45,8 @@ public class ChatHub(RedisService redisGetSetService) : Hub
             SenderId = senderId,
             UserMaskedId = maskedSenderId,
             Content = content,
-            Type = IsImageUrl(content) ? MessageType.Image : MessageType.Text
+            Type = IsImageUrl(content) ? MessageType.Image : MessageType.Text,
+            CreatedAt = DateTime.UtcNow,
         };
 
         // Lưu vào Redis Queue

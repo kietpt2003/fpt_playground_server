@@ -1,11 +1,14 @@
 ﻿using FPTPlaygroundServer.Data;
+using FPTPlaygroundServer.Features.Chats;
 using FPTPlaygroundServer.Services.Redis;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FPTPlaygroundServer.Services.Background.Chats;
 
-public class MessageBackgroundService(IServiceProvider serviceProvider) : BackgroundService
+public class MessageBackgroundService(IServiceProvider serviceProvider, IHubContext<ChatHub> hub) : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IHubContext<ChatHub> _hub = hub;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -22,8 +25,12 @@ public class MessageBackgroundService(IServiceProvider serviceProvider) : Backgr
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                    dbContext.Messages.Add(message);
-                    await dbContext.SaveChangesAsync(stoppingToken);
+                    if (message is not null)
+                    {
+                        await _hub.Clients.Group(message.ConversationId.ToString()).SendAsync("GroupMethod", message.Content, stoppingToken);
+                        dbContext.Messages.Add(message);
+                        await dbContext.SaveChangesAsync(stoppingToken);
+                    }
                 }
             }
             catch (Exception ex)
