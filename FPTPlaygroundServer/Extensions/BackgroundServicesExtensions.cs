@@ -13,6 +13,7 @@ public static class BackgroundServicesExtensions
         services.AddHostedService<AccountVerifyCleanupService>();
         services.AddHostedService<DailyCheckpointRefreshService>();
         services.AddHostedService<FaceValueRefreshQuantityService>();
-        services.AddHostedService<MessageBackgroundService>();
+        services.AddHostedService<SendMessageService>();
+        services.AddHostedService<SaveMessageService>();
     }
 }

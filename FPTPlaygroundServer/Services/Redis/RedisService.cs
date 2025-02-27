@@ -1,4 +1,5 @@
 ﻿using FPTPlaygroundServer.Data.Entities;
+using FPTPlaygroundServer.Services.Redis.Models;
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using System.Text.Json;
@@ -57,5 +58,12 @@ public class RedisService
     {
         string? jsonMessage = await _database.ListLeftPopAsync(ChatQueueKey);
         return jsonMessage != null ? JsonSerializer.Deserialize<Message>(jsonMessage) : null;
+    }
+
+    public async Task PublishMessage(Message message)
+    {
+        var subscriber = _redis.GetSubscriber();
+        string jsonMessage = JsonSerializer.Serialize(message);
+        await subscriber.PublishAsync(RedisChannels.ChatChannel.ToString(), jsonMessage);
     }
 }

@@ -1,14 +1,11 @@
 ﻿using FPTPlaygroundServer.Data;
-using FPTPlaygroundServer.Features.Chats;
 using FPTPlaygroundServer.Services.Redis;
-using Microsoft.AspNetCore.SignalR;
 
 namespace FPTPlaygroundServer.Services.Background.Chats;
 
-public class MessageBackgroundService(IServiceProvider serviceProvider, IHubContext<ChatHub> hub) : BackgroundService
+public class SaveMessageService(IServiceProvider serviceProvider) : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
-    private readonly IHubContext<ChatHub> _hub = hub;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -19,7 +16,7 @@ public class MessageBackgroundService(IServiceProvider serviceProvider, IHubCont
                 using var scope = _serviceProvider.CreateScope();
                 var redisService = scope.ServiceProvider.GetRequiredService<RedisService>();
 
-                var message = await redisService.GetNextMessageAsync();
+                var message = await redisService.GetNextMessageAsync(); //Save message nhận được (Chỉ save đúng 1 lần, server đầu tiên nhận được sẽ save)
 
                 if (message != null)
                 {
@@ -27,7 +24,6 @@ public class MessageBackgroundService(IServiceProvider serviceProvider, IHubCont
 
                     if (message is not null)
                     {
-                        await _hub.Clients.Group(message.ConversationId.ToString()).SendAsync("GroupMethod", message.Content, stoppingToken);
                         dbContext.Messages.Add(message);
                         await dbContext.SaveChangesAsync(stoppingToken);
                     }
