@@ -11,12 +11,16 @@ public class Mate
     public Guid MateId { get; set; }
     public MateStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    [ForeignKey(nameof(UpdatedUser))]
+    public Guid UpdatedBy { get; set; }
 
     public User User { get; set; } = default!;
     public User YourMate { get; set; } = default!;
+    public User UpdatedUser { get; set; } = default!;
 }
 
 public enum MateStatus
 {
-    Pending, Dated
+    Pending, Dated, Cancelled
 }
