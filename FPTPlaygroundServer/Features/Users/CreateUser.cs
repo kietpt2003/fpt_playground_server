@@ -184,7 +184,7 @@ public class CreateUser : ControllerBase
                 DateTime today = DateTime.UtcNow.Date;
 
                 // Tìm ngày đầu tuần hiện tại, bắt đầu từ thứ Hai
-                int diff = (int)today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1;
+                int diff = today.DayOfWeek == 0 ? 6 : (int)today.DayOfWeek - 1;
                 DateTime startOfWeek = today.AddDays(-diff); // Bắt đầu từ 7h sáng của ngày đầu tuần. Lưu ý 7h sáng VN tức là 0h UTC. Và lưu xuống DB là 7h +7 => 7 - 7 = 0h UTC
 
                 for (int i = 0; i < 14; i++)
