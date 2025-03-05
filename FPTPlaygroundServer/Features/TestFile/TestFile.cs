@@ -11,6 +11,7 @@ public class TestFile : ControllerBase
     public new class Request
     {
         public IFormFile? File { get; set; }
+        public string FileName { get; set; } = default!;
     }
 
     [HttpPatch("file")]
@@ -26,7 +27,7 @@ public class TestFile : ControllerBase
             string? avatarUrl = null;
             try
             {
-                avatarUrl = await storageService.UploadFileToCloudStorage(request.File!, Guid.NewGuid().ToString());
+                avatarUrl = await storageService.UploadFileToCloudStorage(request.File!, request.FileName);
             }
             catch (Exception)
             {
@@ -40,6 +41,6 @@ public class TestFile : ControllerBase
             .Build();
         }
 
-        return Ok("Cập nhật thành công");
+        return Ok($"Cập nhật thành công {avatarUrl}");
     }
 }

@@ -7,7 +7,6 @@ using FPTPlaygroundServer.Services.Auth;
 using FPTPlaygroundServer.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Any;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace FPTPlaygroundServer.Features.Mates;

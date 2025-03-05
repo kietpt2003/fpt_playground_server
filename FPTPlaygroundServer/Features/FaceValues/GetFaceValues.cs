@@ -1,9 +1,11 @@
-﻿using FPTPlaygroundServer.Common.Filters;
+﻿using FPTPlaygroundServer.Common.Exceptions;
+using FPTPlaygroundServer.Common.Filters;
 using FPTPlaygroundServer.Common.Paginations;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
 using FPTPlaygroundServer.Features.FaceValues.Mappers;
 using FPTPlaygroundServer.Features.Servers.Models;
+using FPTPlaygroundServer.Services.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Linq.Expressions;
@@ -33,8 +35,17 @@ public class GetFaceValues : ControllerBase
         """
     )]
     [ProducesResponseType(typeof(PageList<ServerResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context)
+    public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context, [FromServices] CurrentUserService currentUserService)
     {
+        var user = await currentUserService.GetCurrentUser();
+        if (user!.Status == UserStatus.Inactive || user.Account.Status != AccountStatus.Active)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("user", "Your account have been inactive or not deactivate")
+                .Build();
+        }
+
         var query = context.FaceValues.AsQueryable();
 
         query = query.OrderByColumn(GetSortProperty(request), request.SortOrder);

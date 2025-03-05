@@ -11,6 +11,7 @@ public static class ApplyMigrationsExtensions
         using var scope = app.ApplicationServices.CreateScope();
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<AppDbContext>();
+        var maskedAvatarSeed = services.GetRequiredService<MaskedAvatarSeed>();
         if (context.Database.GetPendingMigrations().Any())
         {
             context.Database.Migrate();
@@ -39,6 +40,15 @@ public static class ApplyMigrationsExtensions
             foreach (var faceValue in FaceValueSeed.Default)
             {
                 context.FaceValues.Add(faceValue);
+            }
+            await context.SaveChangesAsync();
+        }
+
+        if (!await context.MaskedAvatars.AnyAsync())
+        {
+            foreach (var maskedAvatar in maskedAvatarSeed.GetDefault())
+            {
+                context.MaskedAvatars.Add(maskedAvatar);
             }
             await context.SaveChangesAsync();
         }

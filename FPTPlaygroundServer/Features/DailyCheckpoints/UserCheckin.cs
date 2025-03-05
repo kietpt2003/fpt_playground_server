@@ -40,8 +40,8 @@ public class UserCheckin : ControllerBase
     {
         DateTime currentTime = DateTime.UtcNow; //Giờ UTC hiện tại
         DateTime checkInDate = DateTime.UtcNow.Date; // 00:00 AM UTC <=> 07:00 AM VN
-        DateTime startCheckin = checkInDate.AddHours(7); // 07:00 AM UTC
-        DateTime endOfDay = checkInDate.AddDays(1).AddSeconds(-1); // 23:59:59 PM UT
+        DateTime startCheckin = checkInDate; // 07:00 AM VN
+        DateTime endOfDay = checkInDate.AddHours(17).AddSeconds(-1); // 16:59:59 PM UTC <=> 23:59:59 PM VN
 
         var user = await currentUserService.GetCurrentUser();
         if (user!.Status == UserStatus.Inactive || user.Account.Status != AccountStatus.Active)
@@ -52,11 +52,11 @@ public class UserCheckin : ControllerBase
                 .Build();
         }
 
-        if (currentTime < startCheckin || currentTime > endOfDay) //Nằm trong khoảng 7h UTC -> 23:59:59 PM UTC
+        if (currentTime < startCheckin || currentTime > endOfDay) //Nằm trong khoảng 00:00 AM UTC -> 16:59:59 PM UTC
         {
             throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_02)
-                .AddReason("dailyCheckpoint", "Checkin time starts from 7 AM to 11:59 PM (UTC) the same day")
+                .AddReason("dailyCheckpoint", "Checkin time starts from 0 AM to 17:00 PM (UTC) the same day")
                 .Build();
         }
 

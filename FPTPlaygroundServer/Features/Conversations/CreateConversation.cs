@@ -33,8 +33,8 @@ public class CreateConversation : ControllerBase
                 .NotEmpty()
                 .WithMessage("Name cannot be empty");
             RuleFor(c => c.ConversationIndex)
-                .NotEmpty()
-                .WithMessage("ConversationIndex cannot be empty")
+                .NotNull()
+                .WithMessage("ConversationIndex cannot be null")
                 .GreaterThanOrEqualTo(0)
                 .WithMessage("ConversationIndex must be greater than or equal to 0");
             RuleFor(c => c.Type)

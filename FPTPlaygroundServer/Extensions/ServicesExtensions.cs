@@ -1,4 +1,5 @@
-﻿using FPTPlaygroundServer.Services.Auth;
+﻿using FPTPlaygroundServer.Data.Seeds;
+using FPTPlaygroundServer.Services.Auth;
 using FPTPlaygroundServer.Services.Mail;
 using FPTPlaygroundServer.Services.Notifications;
 using FPTPlaygroundServer.Services.Payment;
@@ -22,5 +23,6 @@ public static class ServicesExtensions
         services.AddScoped<FCMNotificationService>();
         services.AddScoped<RedisService>();
         services.AddScoped<GoogleStorageService>();
+        services.AddSingleton<MaskedAvatarSeed>();
     }
 }
