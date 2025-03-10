@@ -78,7 +78,14 @@ public class CreateConversation : ControllerBase
 
         if (request.Type != ConversationType.Personal)
         {
-            bool isExist = await context.Conversations.AnyAsync(c => c.Type != ConversationType.Personal && c.Type != ConversationType.Dating && c.ConversationIndex == request.ConversationIndex && c.ConversationIndex != null);
+            bool isExist = await context.Conversations.AnyAsync(c => 
+                c.Type != ConversationType.Personal && 
+                c.Type == request.Type && 
+                c.Type != ConversationType.Dating && 
+                c.ConversationIndex == request.ConversationIndex && 
+                c.ConversationIndex != null &&
+                c.Status == ConversationStatus.Active
+            );
             if (isExist)
             {
                 throw FPTPlaygroundException.NewBuilder()

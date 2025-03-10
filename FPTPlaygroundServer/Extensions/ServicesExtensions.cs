@@ -23,6 +23,7 @@ public static class ServicesExtensions
         services.AddScoped<FCMNotificationService>();
         services.AddScoped<RedisService>();
         services.AddScoped<GoogleStorageService>();
+        services.AddScoped<GoogleAuthenticatorService>();
         services.AddSingleton<MaskedAvatarSeed>();
     }
 }

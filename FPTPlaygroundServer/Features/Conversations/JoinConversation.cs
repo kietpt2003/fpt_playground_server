@@ -167,7 +167,7 @@ public class JoinConversation : ControllerBase
                 ConversationMember conversationMember = new()
                 {
                     ConversationId = ConversationId,
-                    UserId = request.MaskedAvatarId is null ? user.Id : null,
+                    UserId = request?.MaskedAvatarId == null ? user.Id : null,
                     Role = ConversationMemberRole.Member,
                     Status = ConversationMemberStatus.Joined,
                     JoinedAt = currentTime,
@@ -180,7 +180,7 @@ public class JoinConversation : ControllerBase
                     CreatedAt = currentTime,
                 };
 
-                if (request.MaskedAvatarId is not null)
+                if (request?.MaskedAvatarId != null)
                 {
                     var isInUsed = await context.ConversationMembers
                         .Include(cm => cm.UserMasked)

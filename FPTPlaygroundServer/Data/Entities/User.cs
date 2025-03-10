@@ -12,6 +12,8 @@ public class User
     public int? Grade { get; set; }
     public Guid? SpecializeId { get; set; }
     public UserStatus Status { get; set; }
+    public string? BiometricPublicKey { get; set; }
+    public string? AuthenticatorSecretKey { get; set; }
     public DateTime LastSeenAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

@@ -4,7 +4,6 @@ using FPTPlaygroundServer.Common.Filters;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
 using FPTPlaygroundServer.Services.Auth;
-using FPTPlaygroundServer.Services.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;

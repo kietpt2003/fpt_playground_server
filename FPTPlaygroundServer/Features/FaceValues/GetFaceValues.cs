@@ -4,7 +4,7 @@ using FPTPlaygroundServer.Common.Paginations;
 using FPTPlaygroundServer.Data;
 using FPTPlaygroundServer.Data.Entities;
 using FPTPlaygroundServer.Features.FaceValues.Mappers;
-using FPTPlaygroundServer.Features.Servers.Models;
+using FPTPlaygroundServer.Features.FaceValues.Models;
 using FPTPlaygroundServer.Services.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -34,7 +34,7 @@ public class GetFaceValues : ControllerBase
         `SortColumn` (optional): coinValue, diamondValue, vndValue, createdAt
         """
     )]
-    [ProducesResponseType(typeof(PageList<ServerResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PageList<FaceValueResponse?>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Handler([FromQuery] Request request, [FromServices] AppDbContext context, [FromServices] CurrentUserService currentUserService)
     {
         var user = await currentUserService.GetCurrentUser();
