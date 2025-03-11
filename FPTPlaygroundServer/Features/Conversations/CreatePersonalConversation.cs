@@ -69,6 +69,14 @@ public class CreatePersonalConversation : ControllerBase
                 .AddReason("user", "Your account have been inactive or not deactivate")
                 .Build();
         }
+
+        if (sender.Id == request.ReceiverId)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_02)
+                .AddReason("user", "You cannot chat with yourself")
+                .Build();
+        }
         var receiver = await context.Users
             .Include(user => user.Account)
             .FirstOrDefaultAsync(u => u.Id == request.ReceiverId) ?? throw FPTPlaygroundException.NewBuilder()
@@ -99,25 +107,34 @@ public class CreatePersonalConversation : ControllerBase
                 .AddReason("user", "User have been blocked")
                 .Build();
         }
+
+        var theirConversation = await context.Conversations
+            .Include(c => c.ConversationMembers)
+                .ThenInclude(cm => cm.UserMasked)
+            .Where(c => c.Type == ConversationType.Personal || c.Type == ConversationType.Dating || c.Type == ConversationType.Friendship)
+            .Where(c => c.ConversationMembers.Any(cm => cm.UserId == sender.Id || (cm.UserMasked != null && cm.UserMasked.UserId == sender.Id)) &&
+                        c.ConversationMembers.Any(cm => cm.UserId == receiver.Id || (cm.UserMasked != null && cm.UserMasked.UserId == receiver.Id))
+            ).FirstOrDefaultAsync();
+        if (theirConversation != null) //TH chưa kết bạn hoặc kết bạn rồi nhưng đã chat với nhau rồi => báo lỗi, khỏi tạo
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_01)
+                .AddReason("conversation", "Conversation exist")
+                .Build();
+        }
+
         if (currentFriendship == null) //TH chưa kết bạn => chat với sender là ẩn danh
         {
             Conversation conversation = new()
             {
-                Name = "Private Conversation",
+                Name = "Personal Conversation",
                 Type = ConversationType.Personal,
                 Status = ConversationStatus.Active,
                 CreatedAt = currentTime,
                 UpdatedAt = currentTime,
             };
 
-            Message sysMsg = new()
-            {
-                Conversation = conversation,
-                Type = MessageType.System,
-                CreatedAt = currentTime,
-            };
             var maskedAvatar = await context.MaskedAvatars.FirstOrDefaultAsync(ma => ma.Id == request.MaskedAvatarId);
-            sysMsg.Content = $"{maskedAvatar!.MaskedName} created the chat";
 
             UserMasked maskedSender = new()
             {
@@ -205,7 +222,6 @@ public class CreatePersonalConversation : ControllerBase
                 try
                 {
                     await context.ConversationMembers.AddRangeAsync([currentSender, currentReceiver]);
-                    await context.Messages.AddAsync(sysMsg);
 
                     // Lưu tất cả vào database
                     await context.SaveChangesAsync();
@@ -218,34 +234,29 @@ public class CreatePersonalConversation : ControllerBase
                     Console.WriteLine(ex.ToString());
                     // Rollback nếu có lỗi
                     await transaction.RollbackAsync();
-                    throw FPTPlaygroundException.NewBuilder()
+                    if (ex is FPTPlaygroundException fptPlagroundException)
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
+                        .WithCode(fptPlagroundException.ErrorCode)
+                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                        .Build();
+                    }
+                    else
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
                         .WithCode(FPTPlaygroundErrorCode.FPS_00)
                         .AddReason("server", "Something wrong with the server")
                         .Build();
+                    }
                 }
             });
         }
-        else //TH 2 người đã kết bạn rồi (Lưu ý TH này đã xử lí Mate rồi, vì nếu là Mate thì vẫn giữ nguyên Friendship, chỉ đổi ConversationType
+        else //TH 2 người đã kết bạn rồi
         {
-            var theirConversation = await context.Conversations
-                .Include(c => c.ConversationMembers)
-                    .ThenInclude(cm => cm.UserMasked)
-                .Where(c => c.Type == ConversationType.Personal || c.Type == ConversationType.Dating)
-                .Where(c => c.ConversationMembers.Any(cm => cm.UserId == sender.Id || (cm.UserMasked != null && cm.UserMasked.UserId == sender.Id)) &&
-                            c.ConversationMembers.Any(cm => cm.UserId == receiver.Id || (cm.UserMasked != null && cm.UserMasked.UserId == receiver.Id))
-                ).FirstOrDefaultAsync();
-            if (theirConversation != null) //TH kết bạn rồi nhưng đã chat với nhau rồi => báo lỗi, khỏi tạo
-            {
-                throw FPTPlaygroundException.NewBuilder()
-                    .WithCode(FPTPlaygroundErrorCode.FPB_01)
-                    .AddReason("conversation", "Conversation exist")
-                    .Build();
-            }
-
             Conversation conversation = new()
             {
-                Name = "Personal Conversation",
-                Type = ConversationType.Personal,
+                Name = "Friendship Conversation",
+                Type = ConversationType.Friendship,
                 Status = ConversationStatus.Active,
                 CreatedAt = currentTime,
                 UpdatedAt = currentTime,
@@ -271,14 +282,6 @@ public class CreatePersonalConversation : ControllerBase
                 UpdatedAt = currentTime.AddSeconds(1),
             };
 
-            Message sysMsg = new()
-            {
-                Conversation = conversation,
-                Content = $"{sender.UserName} created the chat",
-                Type = MessageType.System,
-                CreatedAt = currentTime,
-            };
-
             var strategy = context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
@@ -286,7 +289,6 @@ public class CreatePersonalConversation : ControllerBase
                 try
                 {
                     await context.ConversationMembers.AddRangeAsync([currentSender, currentReceiver]);
-                    await context.Messages.AddAsync(sysMsg);
 
                     // Lưu tất cả vào database
                     await context.SaveChangesAsync();
@@ -299,10 +301,20 @@ public class CreatePersonalConversation : ControllerBase
                     Console.WriteLine(ex.ToString());
                     // Rollback nếu có lỗi
                     await transaction.RollbackAsync();
-                    throw FPTPlaygroundException.NewBuilder()
+                    if (ex is FPTPlaygroundException fptPlagroundException)
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
+                        .WithCode(fptPlagroundException.ErrorCode)
+                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                        .Build();
+                    }
+                    else
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
                         .WithCode(FPTPlaygroundErrorCode.FPS_00)
                         .AddReason("server", "Something wrong with the server")
                         .Build();
+                    }
                 }
             });
         }

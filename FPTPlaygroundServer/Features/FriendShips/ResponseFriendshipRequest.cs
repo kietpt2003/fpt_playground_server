@@ -80,9 +80,7 @@ public class ResponseFriendshipRequest : ControllerBase
                 .Build();
         }
 
-        Friendship? friendship = new();
-
-        friendship = await context.Friendships
+        var friendship = await context.Friendships
                 .Include(fs => fs.User)
                     .ThenInclude(u => u.Account)
                 .Include(fs => fs.Friend)
@@ -106,6 +104,14 @@ public class ResponseFriendshipRequest : ControllerBase
                     .AddReason("friendship", "This friendship already in that state")
                     .Build();
             }
+
+            var theirConversation = await context.Conversations
+                .Include(c => c.ConversationMembers)
+                    .ThenInclude(cm => cm.UserMasked)
+                .Where(c => c.Type == ConversationType.Personal || c.Type == ConversationType.Dating || c.Type == ConversationType.Friendship)
+                .Where(c => c.ConversationMembers.Any(cm => cm.UserId == friendship.FriendId || (cm.UserMasked != null && cm.UserMasked.UserId == friendship.FriendId)) &&
+                    c.ConversationMembers.Any(cm => cm.UserId == friendship.UserId || (cm.UserMasked != null && cm.UserMasked.UserId == friendship.UserId))
+                ).FirstOrDefaultAsync();
 
             if (request.Status == FriendshipStatus.Accepted && friendship.Status == FriendshipStatus.Pending)
             {
@@ -173,6 +179,92 @@ public class ResponseFriendshipRequest : ControllerBase
                                 IsRead = false,
                                 Type = NotificationType.Friendship
                             }]);
+
+                            if (theirConversation != null) //Nếu có conversation rồi thì cập nhật lại Type thôi
+                            {
+                                foreach (var member in theirConversation.ConversationMembers)
+                                {
+                                    //Nếu đồng ý kết bạn thì thêm UserId và không xóa MaskedId
+                                    if (!member.UserId.HasValue && member.UserMaskedId.HasValue && member.UserMasked!.UserId == friendship.UserId)
+                                    {
+                                        member.UserId = friendship.FriendId;
+                                    }
+                                    else if (!member.UserId.HasValue && member.UserMaskedId.HasValue && member.UserMasked!.UserId == friendship.FriendId)
+                                    {
+                                        member.UserId = friendship.UserId;
+                                    }
+                                }
+                                theirConversation.Name = "Friendship Conversation";
+                                theirConversation.Type = ConversationType.Friendship;
+                            }
+                            else //Nếu chưa có conversation thì tạo mới
+                            {
+                                Conversation conversation = new()
+                                {
+                                    Name = "Friendship Conversation",
+                                    Type = ConversationType.Friendship,
+                                    Status = ConversationStatus.Active,
+                                    CreatedAt = currentTime,
+                                    UpdatedAt = currentTime,
+                                };
+
+                                ConversationMember currentSender = new()
+                                {
+                                    Conversation = conversation,
+                                    UserId = friendship.UserId,
+                                    Role = ConversationMemberRole.Owner,
+                                    Status = ConversationMemberStatus.Joined,
+                                    JoinedAt = currentTime,
+                                    UpdatedAt = currentTime,
+                                };
+
+                                ConversationMember currentReceiver = new()
+                                {
+                                    Conversation = conversation,
+                                    UserId = friendship.FriendId,
+                                    Role = ConversationMemberRole.Member,
+                                    Status = ConversationMemberStatus.Joined,
+                                    JoinedAt = currentTime.AddSeconds(1),
+                                    UpdatedAt = currentTime.AddSeconds(1),
+                                };
+
+                                var strategy = context.Database.CreateExecutionStrategy();
+                                await strategy.ExecuteAsync(async () =>
+                                {
+                                    using var transaction = await context.Database.BeginTransactionAsync();
+                                    try
+                                    {
+                                        await context.ConversationMembers.AddRangeAsync([currentSender, currentReceiver]);
+
+                                        // Lưu tất cả vào database
+                                        await context.SaveChangesAsync();
+
+                                        // Commit transaction
+                                        await transaction.CommitAsync();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex.ToString());
+                                        // Rollback nếu có lỗi
+                                        await transaction.RollbackAsync();
+                                        if (ex is FPTPlaygroundException fptPlagroundException)
+                                        {
+                                            throw FPTPlaygroundException.NewBuilder()
+                                            .WithCode(fptPlagroundException.ErrorCode)
+                                            .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                                            .Build();
+                                        }
+                                        else
+                                        {
+                                            throw FPTPlaygroundException.NewBuilder()
+                                            .WithCode(FPTPlaygroundErrorCode.FPS_00)
+                                            .AddReason("server", "Something wrong with the server")
+                                            .Build();
+                                        }
+                                    }
+                                });
+                            }
+
                             await context.SaveChangesAsync();
 
                             // Commit transaction
@@ -183,10 +275,20 @@ public class ResponseFriendshipRequest : ControllerBase
                             Console.WriteLine(ex.ToString());
                             // Rollback nếu có lỗi
                             await transaction.RollbackAsync();
-                            throw FPTPlaygroundException.NewBuilder()
+                            if (ex is FPTPlaygroundException fptPlagroundException)
+                            {
+                                throw FPTPlaygroundException.NewBuilder()
+                                .WithCode(fptPlagroundException.ErrorCode)
+                                .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                                .Build();
+                            }
+                            else
+                            {
+                                throw FPTPlaygroundException.NewBuilder()
                                 .WithCode(FPTPlaygroundErrorCode.FPS_00)
                                 .AddReason("server", "Something wrong with the server")
                                 .Build();
+                            }
                         }
                     });
                 }
@@ -197,25 +299,51 @@ public class ResponseFriendshipRequest : ControllerBase
             }
             else if (request.Status == FriendshipStatus.Cancelled && (friendship.Status == FriendshipStatus.Pending || friendship.Status == FriendshipStatus.Accepted))
             {
+                if (theirConversation != null)
+                {
+                    foreach (var member in theirConversation.ConversationMembers)
+                    {
+                        //Nếu hủy kết bạn thì xóa UserId và trở thành chat vs người lạ
+                        if (member.UserId.HasValue)
+                        {
+                            member.UserId = null;
+                        }
+                    }
+                    theirConversation.Type = ConversationType.Personal;
+                }
                 context.Friendships.Remove(friendship);
                 await context.SaveChangesAsync();
             }
             else if (request.Status == FriendshipStatus.Unblocked && friendship.Status == FriendshipStatus.Blocked)
             {
-                if (friendship.UserId != user.Id)
+                if (friendship.UpdatedBy != user.Id)
                 {
                     throw FPTPlaygroundException.NewBuilder()
                     .WithCode(FPTPlaygroundErrorCode.FPV_00)
                     .AddReason("friendship", "You cannot unblocked")
                     .Build();
                 }
+
+                if (theirConversation != null) //Nếu gỡ chặn thì chỉ đổi Type, không được xóa UserId vì có TH 2 người đã là (ko có UserMasked) mà xóa UserId => ko có cả 2 User hay Masked
+                {
+                    theirConversation.Name = "Personal Conversation";
+                    theirConversation.Type = ConversationType.Personal;
+                }
+
                 context.Friendships.Remove(friendship);
                 await context.SaveChangesAsync();
+            }
+            else
+            {
+                throw FPTPlaygroundException.NewBuilder()
+                    .WithCode(FPTPlaygroundErrorCode.FPV_00)
+                    .AddReason("Syntax", "Please select correct Status")
+                    .Build();
             }
         }
         else
         {
-            if (friendship is null) //TH null tức là 2 người này chưa kết bạn mà muốn block luôn
+            if (friendship is null) //TH null tức là 2 người này chưa kết bạn mà muốn block luôn. Lưu ý, chưa kết bạn thì có thể đã chat ẩn danh rồi nên block thì vẫn có thể thấy block trong conversation được, chỉ là không được chat thôi
             {
                 Friendship newFriendship = new()
                 {
@@ -227,9 +355,10 @@ public class ResponseFriendshipRequest : ControllerBase
                     UpdatedBy = user.Id
                 };
                 await context.Friendships.AddAsync(newFriendship);
+
                 await context.SaveChangesAsync();
             }
-            else //TH 2 người này đã kb
+            else //TH 2 người này đã kb hoặc 2 người này hẹn hò (Lưu ý: không cần đổi conversation type vì để get ra thấy được block conversation, cho đến khi unblock tương đương với vô stranger xem)
             {
                 if (friendship.Status == FriendshipStatus.Blocked)
                 {
@@ -250,9 +379,9 @@ public class ResponseFriendshipRequest : ControllerBase
                     {
                         context.Mates.Remove(currentDating);
                     }
-
-                    await context.SaveChangesAsync();
                 }
+
+                await context.SaveChangesAsync();
             }
         }
 

@@ -5,7 +5,7 @@ namespace FPTPlaygroundServer.Features.Conversations.Mappers;
 
 public static class ConversationMapper
 {
-    public static ConversationResponse? ToConversationResponse(this Conversation? c)
+    public static ConversationResponse? ToConversationResponse(this Conversation? c, Guid? userId)
     {
         if (c != null)
         {
@@ -19,6 +19,7 @@ public static class ConversationMapper
                 Status = c.Status,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
+                IsJoined = c.ConversationMembers.Any(cm => (cm.UserId.HasValue && cm.UserId == userId) || (cm.UserMasked != null && cm.UserMasked.UserId == userId))
             };
         }
         return null;

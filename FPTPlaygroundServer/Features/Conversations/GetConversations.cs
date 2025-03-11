@@ -14,7 +14,6 @@ namespace FPTPlaygroundServer.Features.Conversations;
 
 [ApiController]
 [JwtValidationFilter]
-[RequestValidation<Request>]
 [RolesFilter(Role.User)]
 [RequestValidation<Request>]
 public class GetConversations : ControllerBase
@@ -60,10 +59,10 @@ public class GetConversations : ControllerBase
         - `PageIndex`: Lớn hơn hoặc bằng 0 và phải nhỏ hơn PageSize
         - `Type`: Bắt buộc phải truyền type vì cần phải ConversationIndex giữa các type nữa
         - `Status`: Status bắt buộc phải là active, nên không cần truyền
-        - `SortColumn`: Không cần sortColumn nữa vì theo index hết rồi
         - `FilterType`: Personal/All.
             - Personal là chỉ nhóm của user đó
             - All là cho all nhóm trong cùng server
+        - Không dùng API này để lấy chat Type Personal or Dating
         """
     )]
     [ProducesResponseType(typeof(List<ConversationResponse?>), StatusCodes.Status200OK)]
@@ -86,7 +85,8 @@ public class GetConversations : ControllerBase
             .Where(c => c.Type == request.Type)
             .Where(c => c.Status == ConversationStatus.Active)
             .Include(c => c.ConversationMembers)
-                .ThenInclude(cm => cm.UserMasked);
+                .ThenInclude(cm => cm.UserMasked)
+                    .ThenInclude(um => um!.User);
 
         if (request.FilterType == FilterType.Personal)
         {
@@ -104,7 +104,7 @@ public class GetConversations : ControllerBase
         }
 
         var converstions = await query
-            .Select(c => c.ToConversationResponse())
+            .Select(c => c.ToConversationResponse(user.Id))
             .ToListAsync();
         if (converstions != null)
         {

@@ -167,9 +167,14 @@ public class CreateConversation : ControllerBase
 
                     var maskedAvatar = await context.MaskedAvatars.FirstOrDefaultAsync(ma => ma.Id == request.MaskedAvatarId);
                     sysMsg.Content = $"{maskedAvatar!.MaskedName} created the group";
+                    conversation.GroupImageUrl = maskedAvatar.AvatarUrl;
                 } else
                 {
                     sysMsg.Content = $"{user.UserName} created the group";
+                    if (user.AvatarUrl != null)
+                    {
+                        conversation.GroupImageUrl = user.AvatarUrl;
+                    }
                 }
 
                 currentUser.Conversation = conversation;
@@ -187,10 +192,20 @@ public class CreateConversation : ControllerBase
                 Console.WriteLine(ex.ToString());
                 // Rollback nếu có lỗi
                 await transaction.RollbackAsync();
-                throw FPTPlaygroundException.NewBuilder()
+                if (ex is FPTPlaygroundException fptPlagroundException)
+                {
+                    throw FPTPlaygroundException.NewBuilder()
+                    .WithCode(fptPlagroundException.ErrorCode)
+                    .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                    .Build();
+                }
+                else
+                {
+                    throw FPTPlaygroundException.NewBuilder()
                     .WithCode(FPTPlaygroundErrorCode.FPS_00)
                     .AddReason("server", "Something wrong with the server")
                     .Build();
+                }
             }
         });
 

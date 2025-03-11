@@ -12,4 +12,5 @@ public class ConversationResponse
     public ConversationStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsJoined { get; set; }
 }

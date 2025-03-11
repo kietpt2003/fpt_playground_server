@@ -33,6 +33,12 @@ public class DailyCheckpointRefreshService(IServiceProvider serviceProvider) : B
 
                 foreach (var user in users)
                 {
+                    bool isExist = await context.DailyCheckpoints
+                        .AnyAsync(d => d.UserId == user.Id && d.CheckInDate >= checkpoint, stoppingToken);
+                    if (isExist) //Nếu tạo rồi thì không tạo nữa
+                    {
+                        return;
+                    }
                     DailyCheckpoint dailyCheckpoint = new()
                     {
                         UserId = user.Id,

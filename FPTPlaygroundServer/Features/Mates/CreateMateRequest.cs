@@ -199,10 +199,20 @@ public class CreateMateRequest : ControllerBase
                 Console.WriteLine(ex.ToString());
                 // Rollback nếu có lỗi
                 await transaction.RollbackAsync();
-                throw FPTPlaygroundException.NewBuilder()
+                if (ex is FPTPlaygroundException fptPlagroundException)
+                {
+                    throw FPTPlaygroundException.NewBuilder()
+                    .WithCode(fptPlagroundException.ErrorCode)
+                    .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                    .Build();
+                }
+                else
+                {
+                    throw FPTPlaygroundException.NewBuilder()
                     .WithCode(FPTPlaygroundErrorCode.FPS_00)
                     .AddReason("server", "Something wrong with the server")
                     .Build();
+                }
             }
         });
 

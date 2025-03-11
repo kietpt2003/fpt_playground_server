@@ -89,6 +89,24 @@ public class ResponseMateRequest : ControllerBase
                 .Build();
         }
 
+        var friendship = await context.Friendships
+                .Include(fs => fs.User)
+                    .ThenInclude(u => u.Account)
+                .Include(fs => fs.Friend)
+                    .ThenInclude(u => u.Account)
+                .FirstOrDefaultAsync(fs => (fs.UserId == user.Id && fs.FriendId == friend.Id) || (fs.UserId == friend.Id && fs.FriendId == user.Id)) ?? throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_03)
+                .AddReason("mate", "You and this person don't have any relationship")
+                .Build();
+
+        if (friendship.Status == FriendshipStatus.Blocked)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+            .WithCode(FPTPlaygroundErrorCode.FPB_03)
+            .AddReason("friendship", friendship.UpdatedBy == user.Id ? "You cannot do anything while blocking this person" : "User have been blocked")
+            .Build();
+        }
+
         var currentDating = await context.Mates.FirstOrDefaultAsync(m => (m.UserId == user.Id && m.MateId == friend.Id) || (m.MateId == user.Id && m.UserId == friend.Id)) ?? throw FPTPlaygroundException.NewBuilder()
                 .WithCode(FPTPlaygroundErrorCode.FPB_00)
                 .AddReason("mate-request", "Mate request not found")
@@ -101,6 +119,14 @@ public class ResponseMateRequest : ControllerBase
                 .AddReason("mate", "This relationship already in that state")
                 .Build();
         }
+
+        var theirConversation = await context.Conversations
+                .Include(c => c.ConversationMembers)
+                    .ThenInclude(cm => cm.UserMasked)
+                .Where(c => c.Type == ConversationType.Personal || c.Type == ConversationType.Dating || c.Type == ConversationType.Friendship)
+                .Where(c => c.ConversationMembers.Any(cm => cm.UserId == friendship.FriendId || (cm.UserMasked != null && cm.UserMasked.UserId == friendship.FriendId)) &&
+                    c.ConversationMembers.Any(cm => cm.UserId == friendship.UserId || (cm.UserMasked != null && cm.UserMasked.UserId == friendship.UserId))
+                ).FirstOrDefaultAsync();
 
         List<string> userDeviceTokens = currentDating.YourMate.Account.Devices.Select(d => d.Token).ToList(); //User sẽ là YourMate vì người đồng ý phải là User
         List<string> mateDeviceTokens = currentDating.User.Account.Devices.Select(d => d.Token).ToList(); //Mate của bạn trong lúc này chính là người gửi yêu cầu => họ là User
@@ -170,6 +196,80 @@ public class ResponseMateRequest : ControllerBase
                                 IsRead = false,
                                 Type = NotificationType.Mate
                             }]);
+
+                        if (theirConversation != null) //Nếu có conversation rồi thì cập nhật lại Type thôi
+                        {
+                            theirConversation.Name = "Dating Conversation";
+                            theirConversation.Type = ConversationType.Dating;
+                        }
+                        else //Nếu chưa có conversation thì tạo mới
+                        {
+                            Conversation conversation = new()
+                            {
+                                Name = "Dating Conversation",
+                                Type = ConversationType.Friendship,
+                                Status = ConversationStatus.Active,
+                                CreatedAt = currentTime,
+                                UpdatedAt = currentTime,
+                            };
+
+                            ConversationMember currentSender = new()
+                            {
+                                Conversation = conversation,
+                                UserId = friendship.UserId,
+                                Role = ConversationMemberRole.Owner,
+                                Status = ConversationMemberStatus.Joined,
+                                JoinedAt = currentTime,
+                                UpdatedAt = currentTime,
+                            };
+
+                            ConversationMember currentReceiver = new()
+                            {
+                                Conversation = conversation,
+                                UserId = friendship.FriendId,
+                                Role = ConversationMemberRole.Member,
+                                Status = ConversationMemberStatus.Joined,
+                                JoinedAt = currentTime.AddSeconds(1),
+                                UpdatedAt = currentTime.AddSeconds(1),
+                            };
+
+                            var strategy = context.Database.CreateExecutionStrategy();
+                            await strategy.ExecuteAsync(async () =>
+                            {
+                                using var transaction = await context.Database.BeginTransactionAsync();
+                                try
+                                {
+                                    await context.ConversationMembers.AddRangeAsync([currentSender, currentReceiver]);
+
+                                    // Lưu tất cả vào database
+                                    await context.SaveChangesAsync();
+
+                                    // Commit transaction
+                                    await transaction.CommitAsync();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.ToString());
+                                    // Rollback nếu có lỗi
+                                    await transaction.RollbackAsync();
+                                    if (ex is FPTPlaygroundException fptPlagroundException)
+                                    {
+                                        throw FPTPlaygroundException.NewBuilder()
+                                        .WithCode(fptPlagroundException.ErrorCode)
+                                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                                        .Build();
+                                    }
+                                    else
+                                    {
+                                        throw FPTPlaygroundException.NewBuilder()
+                                        .WithCode(FPTPlaygroundErrorCode.FPS_00)
+                                        .AddReason("server", "Something wrong with the server")
+                                        .Build();
+                                    }
+                                }
+                            });
+                        }
+
                         await context.SaveChangesAsync();
 
                         // Commit transaction
@@ -180,10 +280,20 @@ public class ResponseMateRequest : ControllerBase
                         Console.WriteLine(ex.ToString());
                         // Rollback nếu có lỗi
                         await transaction.RollbackAsync();
-                        throw FPTPlaygroundException.NewBuilder()
+                        if (ex is FPTPlaygroundException fptPlagroundException)
+                        {
+                            throw FPTPlaygroundException.NewBuilder()
+                            .WithCode(fptPlagroundException.ErrorCode)
+                            .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                            .Build();
+                        }
+                        else
+                        {
+                            throw FPTPlaygroundException.NewBuilder()
                             .WithCode(FPTPlaygroundErrorCode.FPS_00)
                             .AddReason("server", "Something wrong with the server")
                             .Build();
+                        }
                     }
                 });
             }
@@ -232,10 +342,20 @@ public class ResponseMateRequest : ControllerBase
                     Console.WriteLine(ex.ToString());
                     // Rollback nếu có lỗi
                     await transaction.RollbackAsync();
-                    throw FPTPlaygroundException.NewBuilder()
+                    if (ex is FPTPlaygroundException fptPlagroundException)
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
+                        .WithCode(fptPlagroundException.ErrorCode)
+                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                        .Build();
+                    }
+                    else
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
                         .WithCode(FPTPlaygroundErrorCode.FPS_00)
                         .AddReason("server", "Something wrong with the server")
                         .Build();
+                    }
                 }
             });
         } else if (request.Status == MateStatus.Cancelled && currentDating.Status == MateStatus.Dated) //TH hết yêu => Update status
@@ -270,6 +390,12 @@ public class ResponseMateRequest : ControllerBase
                         Type = NotificationType.Mate
                     });
 
+                    if (theirConversation != null)
+                    {
+                        theirConversation.Name = "Friendship Conversation";
+                        theirConversation.Type = ConversationType.Friendship;
+                    }
+
                     await context.SaveChangesAsync();
 
                     // Commit transaction
@@ -280,10 +406,20 @@ public class ResponseMateRequest : ControllerBase
                     Console.WriteLine(ex.ToString());
                     // Rollback nếu có lỗi
                     await transaction.RollbackAsync();
-                    throw FPTPlaygroundException.NewBuilder()
+                    if (ex is FPTPlaygroundException fptPlagroundException)
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
+                        .WithCode(fptPlagroundException.ErrorCode)
+                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                        .Build();
+                    }
+                    else
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
                         .WithCode(FPTPlaygroundErrorCode.FPS_00)
                         .AddReason("server", "Something wrong with the server")
                         .Build();
+                    }
                 }
             });
         } else

@@ -60,6 +60,14 @@ public class CreateFriendshipRequest : ControllerBase
                 .Build();
         }
 
+        if (user.Id == request.FriendId)
+        {
+            throw FPTPlaygroundException.NewBuilder()
+                .WithCode(FPTPlaygroundErrorCode.FPB_02)
+                .AddReason("user", "You cannot request yourself")
+                .Build();
+        }
+
         var friend = await context.Users
             .Include(u => u.Account)
                 .ThenInclude(a => a.Devices)
@@ -138,10 +146,20 @@ public class CreateFriendshipRequest : ControllerBase
                     Console.WriteLine(ex.ToString());
                     // Rollback nếu có lỗi
                     await transaction.RollbackAsync();
-                    throw FPTPlaygroundException.NewBuilder()
+                    if (ex is FPTPlaygroundException fptPlagroundException)
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
+                        .WithCode(fptPlagroundException.ErrorCode)
+                        .AddReasons(fptPlagroundException.GetReasons().Select(reason => new FPTPlaygroundException.Reason(reason.Title, reason.ReasonMessage)))
+                        .Build();
+                    }
+                    else
+                    {
+                        throw FPTPlaygroundException.NewBuilder()
                         .WithCode(FPTPlaygroundErrorCode.FPS_00)
                         .AddReason("server", "Something wrong with the server")
                         .Build();
+                    }
                 }
             });
         }
