@@ -155,7 +155,11 @@ public class GetUserConversation : ControllerBase
                     .Include(m => m.Sender)
                     .Include(m => m.UserMasked)
                         .ThenInclude(um => um.MaskedAvatar)
+                    .Include(m => m.MessageStatuses)
                     .FirstOrDefaultAsync(m => m.Id == firstMessage.Id);
+
+                var messageStatus = firstMsg!.MessageStatuses.FirstOrDefault();
+                bool isRead = messageStatus != null && messageStatus.ReadAt >= DateTime.UtcNow;
 
                 FirstMessageResponse firstMessageResponse = new()
                 {
@@ -163,6 +167,7 @@ public class GetUserConversation : ControllerBase
                     ConversationId = firstMsg!.ConversationId,
                     Content = firstMsg!.Content,
                     Type = firstMsg!.Type,
+                    IsRead = isRead,
                     CreatedAt = firstMsg!.CreatedAt,
                 };
 
