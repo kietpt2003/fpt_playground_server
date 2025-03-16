@@ -1,8 +1,12 @@
-﻿namespace FPTPlaygroundServer.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FPTPlaygroundServer.Data.Entities;
 
 public class Message
 {
     public Guid Id { get; set; }
+    [ForeignKey(nameof(Parent))]
+    public Guid? ParentId { get; set; }
     public Guid ConversationId { get; set; }
     public Guid? SenderId { get; set; }
     public Guid? UserMaskedId { get; set; }
@@ -10,6 +14,7 @@ public class Message
     public MessageType Type { get; set; }
     public DateTime CreatedAt { get; set; }
 
+    public Message Parent { get; set; } = default!;
     public Conversation Conversation { get; set; } = default!;
     public User Sender { get; set; } = default!;
     public UserMasked UserMasked { get; set; } = default!;

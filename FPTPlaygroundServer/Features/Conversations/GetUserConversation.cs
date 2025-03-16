@@ -42,10 +42,9 @@ public class GetUserConversation : ControllerBase
         - `FilterType`: Friends/Strangers.
             - Friends là bao gồm bạn bè và ny
             - Strangers là chỉ những người chưa kết bạn
-        - Không dùng API này để lấy chat Type khác Personal, Friendship và Dating
         - Friends có thể xem được những người đã block chỉ là không chat được thôi (đối với người block sẽ thấy được ava của người bị block và ngược lại thì không)
         - Khi unblock sẽ hủy kết bạn nên muốn xem lại đoạn chat vs người đó thì phải vào mục Strangers để xem
-        -Stranger có thể xem được những người đã block chỉ là không chat được thôi (đối với người block sẽ thấy được ava của người bị block hoặc ava masked, và ngược lại thì không)
+        - Stranger có thể xem được những người đã block chỉ là không chat được thôi (đối với người block sẽ thấy được ava của người bị block hoặc ava masked, và ngược lại thì không)
         """
     )]
     [ProducesResponseType(typeof(PageList<UserConversationResponse?>), StatusCodes.Status200OK)]
